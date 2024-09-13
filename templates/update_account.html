@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Update Your Account</h1>
+<form action="/update_account" method="post">
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" name="username" value="{{ user[1] }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" value="{{ user[2] }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" value="{{ user[3] }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Update Account</button>
+</form>
+
+<!-- Delete Account Section -->
+<hr>
+<form action="/delete_account" method="post" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+    <button type="submit" class="btn btn-danger mt-3">Delete Account</button>
+</form>
+{% endblock %}
