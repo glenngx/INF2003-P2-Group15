@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Staff Dashboard</h1>
+<!-- Display Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>UserID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Address</th>
+            <th>Contact Number</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for patient in patients %}
+        <tr>
+            <td>{{ patient[0] }}</td>  <!-- UserID -->
+            <td>{{ patient[1] }}</td>  <!-- Username -->
+            <td>{{ patient[2] }}</td>  <!-- Email -->
+            <td>{{ patient[4] }}</td>  <!-- Address -->
+            <td>{{ patient[5] }}</td>  <!-- Contact Number -->
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    // Hide the flash message after 3 seconds
+    setTimeout(function() {
+        const flashMessage = document.getElementById('flash-message');
+        if (flashMessage) {
+            flashMessage.style.display = 'none';
+        }
+    }, 3000);  // 3000 milliseconds = 3 seconds
+</script>
+{% endblock %}
