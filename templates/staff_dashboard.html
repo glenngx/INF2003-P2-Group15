@@ -2,7 +2,16 @@
 
 {% block content %}
 <h1>Staff Dashboard</h1>
-<p>Welcome to the staff dashboard. Here you can manage all patients.</p>
+<!-- Display Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 
 <table class="table table-striped">
     <thead>
@@ -27,4 +36,13 @@
     </tbody>
 </table>
 
+<script>
+    // Hide the flash message after 3 seconds
+    setTimeout(function() {
+        const flashMessage = document.getElementById('flash-message');
+        if (flashMessage) {
+            flashMessage.style.display = 'none';
+        }
+    }, 3000);  // 3000 milliseconds = 3 seconds
+</script>
 {% endblock %}

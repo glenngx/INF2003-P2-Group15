@@ -2,12 +2,14 @@
 
 {% block content %}
 <h1>Update Your Account</h1>
-<!-- Display Flash Messages for Invalid Credentials -->
-{% with messages = get_flashed_messages() %}
+<!-- Display Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
-        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
-            {{ messages[0] }}
-        </div>
+        {% for category, message in messages %}
+            <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
     {% endif %}
 {% endwith %}
 <form action="/update_account" method="post">
@@ -46,4 +48,14 @@
 <form action="/delete_account" method="post" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
     <button type="submit" class="btn btn-danger mt-3">Delete Account</button>
 </form>
+
+<script>
+    // Hide the flash message after 3 seconds
+    setTimeout(function() {
+        const flashMessage = document.getElementById('flash-message');
+        if (flashMessage) {
+            flashMessage.style.display = 'none';
+        }
+    }, 3000);  // 3000 milliseconds = 3 seconds
+</script>
 {% endblock %}

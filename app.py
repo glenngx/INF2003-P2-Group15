@@ -98,10 +98,10 @@ def login():
 
             # Redirect based on whether the user is staff or patient
             if user[6] == 1:  # If IsStaff is 1, it's a staff member
-                flash('Welcome, staff member!')
+                flash('Welcome, staff member!', 'success')
                 return redirect(url_for('staff_dashboard'))
             else:  # If IsStaff is 0, it's a patient
-                flash('Welcome, patient!')
+                flash('Welcome, patient!', 'success')
                 return redirect(url_for('patient_dashboard'))
         else:
             flash('Invalid login credentials.')
