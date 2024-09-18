@@ -42,4 +42,15 @@
     </div> -->
     <button type="submit" class="btn btn-primary">Register</button>
 </form>
+
+
+<script>
+    // Hide the flash message after 3 seconds
+    setTimeout(function() {
+        const flashMessage = document.getElementById('flash-message');
+        if (flashMessage) {
+            flashMessage.style.display = 'none';
+        }
+    }, 3000);  // 3000 milliseconds = 3 seconds
+</script>
 {% endblock %}
