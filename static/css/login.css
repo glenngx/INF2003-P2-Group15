@@ -1,0 +1,51 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+    background-color: #FFFFFF !important;
+}
+
+.container {
+    flex-grow: 1;
+    max-width: 100%;
+    padding: 0 !important;
+    display: flex;
+}
+
+.row {
+    display: flex;
+    height: 100vh;
+    margin-top: -3.5rem;
+}
+
+.column {
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.rightcol {
+    flex:33%;
+    background-image: url(../images/pexels-anntarazevich-7904469.jpg);
+    background-size: cover;
+    background-repeat: none;
+}
+
+.leftcol {
+    flex: 67%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
