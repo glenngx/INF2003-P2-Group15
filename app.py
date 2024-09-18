@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash
 import re
 import mysql.connector
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Replace with a secure key
@@ -64,6 +65,18 @@ def register():
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (username, email, password, address, contact_number, is_staff))
         connection.commit()
+
+        # Get the newly created user's ID
+        user_id = cursor.lastrowid
+
+        # Insert a corresponding record into the Patients table with NULL values if the user is not staff
+        if not is_staff:
+            cursor.execute("""
+                INSERT INTO Patients (UserID, PatientName, PatientGender, PatientHeight, PatientWeight, PatientDOB, PatientConditions)
+                VALUES (%s, NULL, NULL, NULL, NULL, NULL, NULL)
+            """, (user_id,))
+            connection.commit()
+
         cursor.close()
         connection.close()
 
@@ -108,6 +121,123 @@ def login():
             return redirect(url_for('login'))
 
     return render_template('login.html')
+
+# edit patient records
+@app.route('/edit_patient/<int:patient_id>', methods=['GET', 'POST'])
+def edit_patient(patient_id):
+    if 'is_staff' not in session or session['is_staff'] != 1:
+        flash('You do not have access to this page.')
+        return redirect(url_for('login'))
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    if request.method == 'POST':
+        patient_name = request.form['patient_name']
+        patient_gender = request.form['patient_gender']
+        patient_height = request.form['patient_height']
+        patient_weight = request.form['patient_weight']
+        patient_dob = request.form['patient_dob']
+        patient_conditions = request.form['patient_conditions']
+
+        try:
+            cursor.execute("""
+                UPDATE Patients
+                SET PatientName = %s, PatientGender = %s, PatientHeight = %s, 
+                    PatientWeight = %s, PatientDOB = %s, PatientConditions = %s
+                WHERE UserID = %s
+            """, (patient_name, patient_gender, patient_height, patient_weight,
+                  patient_dob, patient_conditions, patient_id))
+            connection.commit()
+            flash('Patient details updated successfully!', 'success')
+        except mysql.connector.Error as err:
+            flash(f'An error occurred: {err}', 'danger')
+
+        return redirect(url_for('staff_dashboard'))
+
+    # Fetch patient details
+    cursor.execute("SELECT * FROM Patients WHERE UserID = %s", (patient_id,))
+    patient = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    if patient:
+        return render_template('edit_patient.html', patient=patient)
+    else:
+        flash('Patient not found.', 'danger')
+        return redirect(url_for('staff_dashboard'))
+
+
+@app.route('/book_appointment', methods=['GET', 'POST'])
+def book_appointment():
+    if 'user_id' not in session:
+        flash('Please log in to book an appointment.')
+        return redirect(url_for('login'))
+
+    if session.get('is_staff') == 1:
+        flash('Staff members cannot book appointments.')
+        return redirect(url_for('staff_dashboard'))
+
+    if request.method == 'POST':
+        # Collect form data
+        appt_date = request.form.get('appt_date')
+        appt_time = request.form.get('appt_time')
+        appt_reason = request.form.get('appt_reason')
+
+        # Basic validation
+        if not appt_date or not appt_time or not appt_reason:
+            flash('All fields are required.')
+            return redirect(url_for('book_appointment'))
+
+        # Validate date and time formats
+        try:
+            appt_date_obj = datetime.strptime(appt_date, '%Y-%m-%d').date()
+            appt_time_obj = datetime.strptime(appt_time, '%H:%M').time()
+        except ValueError:
+            flash('Invalid date or time format.')
+            return redirect(url_for('book_appointment'))
+
+        # Optional: Add more validations, e.g., appointment in the future
+        if appt_date_obj < datetime.today().date():
+            flash('Appointment date must be in the future.')
+            return redirect(url_for('book_appointment'))
+
+        # Connect to the database
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        try:
+            # Fetch PatientID for the current user
+            cursor.execute("SELECT PatientID FROM Patients WHERE UserID = %s", (session['user_id'],))
+            patient = cursor.fetchone()
+
+            if not patient:
+                flash('Patient record not found. Please contact support.')
+                return redirect(url_for('patient_dashboard'))
+
+            patient_id = patient[0]
+
+            # Insert the appointment into the Appointments table
+            cursor.execute("""
+                INSERT INTO Appointments (PatientID, ApptDate, ApptTime, ApptStatus, ApptReason)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (patient_id, appt_date_obj, appt_time_obj, 'Pending', appt_reason))
+            connection.commit()
+
+            flash('Appointment booked successfully!', 'success')
+            return redirect(url_for('patient_dashboard'))
+
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            flash('An error occurred while booking the appointment. Please try again.', 'danger')
+            return redirect(url_for('book_appointment'))
+
+        finally:
+            cursor.close()
+            connection.close()
+
+    return render_template('book_appointment.html')
 
 # User logout route
 @app.route('/logout')
@@ -214,15 +344,29 @@ def staff_dashboard():
 def patient_dashboard():
     if 'is_staff' in session and session['is_staff'] == 0:
         connection = get_db_connection()
-        cursor = connection.cursor()
+        cursor = connection.cursor(dictionary=True)
 
-        # Fetch patient details (the current logged-in patient)
+        # Fetch user details
         cursor.execute("SELECT * FROM Users WHERE UserID = %s", (session['user_id'],))
+        user = cursor.fetchone()
+
+        # Fetch patient details
+        cursor.execute("SELECT * FROM Patients WHERE UserID = %s", (session['user_id'],))
         patient = cursor.fetchone()
+
+        # Fetch appointments for the patient
+        cursor.execute("""
+            SELECT ApptID, PatientID, ApptDate, ApptTime, ApptStatus, ApptReason
+            FROM Appointments
+            WHERE PatientID = %s
+            ORDER BY ApptDate DESC, ApptTime DESC
+        """, (patient['PatientID'],))
+        appointments = cursor.fetchall()
 
         cursor.close()
         connection.close()
-        return render_template('patient_dashboard.html', patient=patient)
+
+        return render_template('patient_dashboard.html', user=user, patient=patient, appointments=appointments)
     else:
         flash('You do not have access to this page.')
         return redirect(url_for('login'))

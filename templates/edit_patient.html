@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Edit Patient Details</h1>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="POST">
+  <div class="form-group">
+    <label for="patient_name">Name:</label>
+    <input type="text" class="form-control" id="patient_name" name="patient_name" value="{{ patient.PatientName or '' }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="patient_gender">Gender:</label>
+    <select class="form-control" id="patient_gender" name="patient_gender" required>
+        <option value="M" selected>Male</option>
+        <option value="F">Female</option>
+    </select>
+    </div>
+
+  <div class="form-group">
+    <label for="patient_height">Height (m):</label>
+    <input type="number" step="0.01" class="form-control" id="patient_height" name="patient_height" value="{{ patient.PatientHeight or '' }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="patient_weight">Weight (kg):</label>
+    <input type="number" step="0.1" class="form-control" id="patient_weight" name="patient_weight" value="{{ patient.PatientWeight or '' }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="patient_dob">Date of Birth:</label>
+    <input type="date" class="form-control" id="patient_dob" name="patient_dob" value="{{ patient.PatientDOB or '' }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="patient_conditions">Medical Conditions:</label>
+    <textarea class="form-control" id="patient_conditions" name="patient_conditions" rows="3">{{ patient.PatientConditions or '' }}</textarea>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Update Patient Details</button>
+</form>
+{% endblock %}

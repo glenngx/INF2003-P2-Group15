@@ -1,31 +1,72 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block content %}
-<h1>Patient Dashboard</h1>
-<!-- Display Flash Messages -->
-{% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
-                {{ message }}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
             </div>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
+        {% endif %}
+    {% endwith %}
 
-<ul>
-    <li><strong>Email:</strong> {{ patient[2] }}</li>
-    <li><strong>Address:</strong> {{ patient[4] }}</li>
-    <li><strong>Contact Number:</strong> {{ patient[5] }}</li>
-</ul>
+    <div class="container mt-5">
+        <h2>Welcome, {{ session['username'] }}</h2>
 
-<script>
-    // Hide the flash message after 3 seconds
-    setTimeout(function() {
-        const flashMessage = document.getElementById('flash-message');
-        if (flashMessage) {
-            flashMessage.style.display = 'none';
-        }
-    }, 3000);  // 3000 milliseconds = 3 seconds
-</script>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Your Account Details</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Email:</strong> {{ user.Email }}</p>
+                <p><strong>Address:</strong> {{ user.Address or 'N/A' }}</p>
+                <p><strong>Contact Number:</strong> {{ user.ContactNumber or 'N/A' }}</p>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('update_account') }}" class="btn btn-warning">Update Account</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+
+        <a href="{{ url_for('book_appointment') }}" class="btn btn-primary mb-4">Book an Appointment</a>
+
+        <h3 class="mt-4">Your Appointments</h3>
+        {% if appointments %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Appointment ID</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                        <tr>
+                            <td>{{ appt.ApptID }}</td>
+                            <td>{{ appt.ApptDate }}</td>
+                            <td>{{ appt.ApptTime }}</td>
+                            <td>{{ appt.ApptStatus }}</td>
+                            <td>{{ appt.ApptReason }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>You have no appointments booked.</p>
+        {% endif %}
+    </div>
+    <script>
+        // Hide the flash message after 3 seconds
+        setTimeout(function() {
+            const flashMessages = document.querySelectorAll('.alert');
+            flashMessages.forEach(function(flashMessage) {
+                flashMessage.style.display = 'none';
+            });
+        }, 3000);  // 3000 milliseconds = 3 seconds
+    </script>
 {% endblock %}
