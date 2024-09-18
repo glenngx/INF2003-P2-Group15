@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Patient Dashboard</h1>
+<p>Welcome, {{ patient[1] }}! Here is your account information:</p>
+
+<ul>
+    <li><strong>Email:</strong> {{ patient[2] }}</li>
+    <li><strong>Address:</strong> {{ patient[4] }}</li>
+    <li><strong>Contact Number:</strong> {{ patient[5] }}</li>
+</ul>
+
+{% endblock %}

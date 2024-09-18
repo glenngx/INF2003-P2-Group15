@@ -94,35 +94,26 @@ def login():
         if user:
             session['user_id'] = user[0]
             session['username'] = user[1]
-            return redirect(url_for('index'))
+            session['is_staff'] = user[6]  # IsStaff column
+
+            # Redirect based on whether the user is staff or patient
+            if user[6] == 1:  # If IsStaff is 1, it's a staff member
+                flash('Welcome, staff member!')
+                return redirect(url_for('staff_dashboard'))
+            else:  # If IsStaff is 0, it's a patient
+                flash('Welcome, patient!')
+                return redirect(url_for('patient_dashboard'))
         else:
-            # Flash message for invalid credentials
-            flash('Invalid username or password. Please try again.')
+            flash('Invalid login credentials.')
             return redirect(url_for('login'))
 
     return render_template('login.html')
-
-
 
 # User logout route
 @app.route('/logout')
 def logout():
     session.clear()  # Clear session data
     return redirect(url_for('login'))
-
-# Home route: Show all users and display logged-in username
-@app.route('/')
-def index():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-
-    connection = get_db_connection()
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM Users")
-    users = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return render_template('index.html', users=users)
 
 # Route to update the logged-in user's account details
 @app.route('/update_account', methods=['GET', 'POST'])
@@ -169,7 +160,7 @@ def update_account():
         # Update session data with new username
         session['username'] = username
         flash('Account updated successfully!', 'success')
-        return redirect(url_for('index'))
+        return redirect(url_for('update_account'))
 
     # Fetch the current user's data
     cursor.execute("SELECT * FROM Users WHERE UserID = %s", (session['user_id'],))
@@ -199,6 +190,42 @@ def delete_account():
     session.clear()
     flash('Your account has been deleted successfully.', 'success')
     return redirect(url_for('register'))
+
+# Staff Dashboard route
+@app.route('/staff_dashboard')
+def staff_dashboard():
+    if 'is_staff' in session and session['is_staff'] == 1:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Fetch all patients (IsStaff = 0)
+        cursor.execute("SELECT * FROM Users WHERE IsStaff = 0")
+        patients = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+        return render_template('staff_dashboard.html', patients=patients)
+    else:
+        flash('You do not have access to this page.')
+        return redirect(url_for('login'))
+
+# Patient Dashboard route
+@app.route('/patient_dashboard')
+def patient_dashboard():
+    if 'is_staff' in session and session['is_staff'] == 0:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Fetch patient details (the current logged-in patient)
+        cursor.execute("SELECT * FROM Users WHERE UserID = %s", (session['user_id'],))
+        patient = cursor.fetchone()
+
+        cursor.close()
+        connection.close()
+        return render_template('patient_dashboard.html', patient=patient)
+    else:
+        flash('You do not have access to this page.')
+        return redirect(url_for('login'))
 
 if __name__ == '__main__':
     app.run(debug=True)

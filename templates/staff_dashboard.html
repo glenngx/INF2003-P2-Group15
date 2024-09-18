@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Staff Dashboard</h1>
+<p>Welcome to the staff dashboard. Here you can manage all patients.</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>UserID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Address</th>
+            <th>Contact Number</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for patient in patients %}
+        <tr>
+            <td>{{ patient[0] }}</td>  <!-- UserID -->
+            <td>{{ patient[1] }}</td>  <!-- Username -->
+            <td>{{ patient[2] }}</td>  <!-- Email -->
+            <td>{{ patient[4] }}</td>  <!-- Address -->
+            <td>{{ patient[5] }}</td>  <!-- Contact Number -->
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
