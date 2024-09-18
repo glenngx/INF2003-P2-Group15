@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Book an Appointment</h1>
+<!-- Display Flash Messages for Success/Failure -->
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+            {{ messages[0] }}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<form action="/book_appointment" method="post">
+    <!-- Patient Name -->
+    <div class="mb-3">
+        <label for="name" class="form-label">Full Name</label>
+        <input type="text" class="form-control" id="name" name="name" required>
+    </div>
+
+    <!-- Appointment Date -->
+    <div class="mb-3">
+        <label for="appt_date" class="form-label">Appointment Date</label>
+        <input type="date" class="form-control" id="appt_date" name="appt_date" required>
+    </div>
+
+    <!-- Appointment Time Slot -->
+    <div class="mb-3">
+        <label for="appt_time" class="form-label">Appointment Time Slot</label>
+        <select class="form-select" id="appt_time" name="appt_time" required>
+            <option value="">Select a time slot</option>
+            <option value="09:00-10:00">09:00 AM - 10:00 AM</option>
+            <option value="10:00-11:00">10:00 AM - 11:00 AM</option>
+            <option value="11:00-12:00">11:00 AM - 12:00 PM</option>
+            <option value="13:00-14:00">01:00 PM - 02:00 PM</option>
+            <option value="14:00-15:00">02:00 PM - 03:00 PM</option>
+            <option value="15:00-16:00">03:00 PM - 04:00 PM</option>
+        </select>
+    </div>
+
+    <!-- Reason for Appointment -->
+    <div class="mb-3">
+        <label for="appt_reason" class="form-label">Reason for Appointment</label>
+        <textarea class="form-control" id="appt_reason" name="appt_reason" rows="4" placeholder="Describe the reason for your appointment" required></textarea>
+    </div>
+
+    <!-- Submit button -->
+    <button type="submit" class="btn btn-primary">Book Appointment</button>
+</form>
+{% endblock %}
