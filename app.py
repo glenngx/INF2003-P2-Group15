@@ -28,6 +28,10 @@ def is_valid_sg_phone(phone):
     """Check if the phone number is a valid Singapore number (starts with 6, 8, or 9 and is 8 digits long)."""
     return re.match(r'^[689]\d{7}$', phone) is not None
 
+@app.route('/')
+def index():
+    return redirect('login')
+
 # User registration route
 @app.route('/register', methods=['GET', 'POST'])
 def register():
