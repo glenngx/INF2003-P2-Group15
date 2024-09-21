@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, session, url_for, f
 import re
 import mysql.connector
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Replace with a secure key
@@ -46,6 +47,7 @@ def register():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')  # Hash the password
         address = request.form.get('address')  # Optional field
         contact_number = request.form.get('contact_number')  # Optional field
         name = request.form.get('name')  # New field for actual name
@@ -78,7 +80,7 @@ def register():
         cursor.execute("""
             INSERT INTO Users (Username, Email, Password, Address, ContactNumber, IsStaff)
             VALUES (%s, %s, %s, %s, %s, %s)
-        """, (username, email, password, address, contact_number, is_staff))
+        """, (username, email, hashed_password, address, contact_number, is_staff))
         connection.commit()
 
         # Get the newly created user's ID
@@ -121,12 +123,12 @@ def login():
 
         connection = get_db_connection()
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM Users WHERE Username = %s AND Password = %s", (username, password))
+        cursor.execute("SELECT * FROM Users WHERE Username = %s", (username,))
         user = cursor.fetchone()
         cursor.close()
         connection.close()
 
-        if user:
+        if user and check_password_hash(user[3], password):
             session['user_id'] = user[0]
             session['username'] = user[1]
             session['is_staff'] = user[6]  # IsStaff column
@@ -281,6 +283,7 @@ def update_account():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         address = request.form.get('address')
         contact_number = request.form.get('contact_number')
         is_staff = 1 if 'is_staff' in request.form else 0
@@ -307,7 +310,7 @@ def update_account():
             UPDATE Users
             SET Username = %s, Email = %s, Password = %s, Address = %s, ContactNumber = %s, IsStaff = %s
             WHERE UserID = %s
-        """, (username, email, password, address, contact_number, is_staff, session['user_id']))
+        """, (username, email, hashed_password, address, contact_number, is_staff, session['user_id']))
         connection.commit()
 
         # Update session data with new username
