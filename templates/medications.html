@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/medications.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="column leftcol">
+        <div class="leftcolbg"></div>
+        <h1>List of Medications</h1>
+
+        <!-- Display Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Medications Table -->
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Medication ID</th>
+                    <th>Name</th>
+                    <th>Form</th>
+                    <th>Dosage</th>
+                    <th>Indication</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for medication in medications %}
+                <tr>
+                    <td>{{ medication['med_id'] }}</td>
+                    <td>{{ medication['name'] }}</td>
+                    <td>{{ medication['form'] }}</td>
+                    <td>{{ medication['dosage'] }}</td>
+                    <td>{{ medication['indication'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="column rightcol"></div>
+</div>
+
+<script>
+    // Hide the flash message after 3 seconds
+    setTimeout(function() {
+        const flashMessage = document.getElementById('flash-message');
+        if (flashMessage) {
+            flashMessage.style.display = 'none';
+        }
+    }, 3000);  // 3000 milliseconds = 3 seconds
+</script>
+{% endblock %}

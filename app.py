@@ -397,5 +397,23 @@ def patient_dashboard():
         flash('Please login or create a new account to access our services.')
         return redirect(url_for('login'))
 
+@app.route('/medications')
+def medications():
+    if 'is_staff' in session:  # You can modify the condition based on access control
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Fetch all medications from the Medications table
+        cursor.execute("SELECT * FROM Medications")
+        medications = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return render_template('medications.html', medications=medications)
+    else:
+        flash('Please login to view the list of medications.')
+        return redirect(url_for('login'))
+
 if __name__ == '__main__':
     app.run(debug=True)
