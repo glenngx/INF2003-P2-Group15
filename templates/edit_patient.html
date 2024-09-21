@@ -18,6 +18,11 @@
   </div>
 
   <div class="form-group">
+    <label for="nric">NRIC:</label>
+    <input type="text" class="form-control" id="nric" name="nric" value="{{ patient.NRIC or '' }}" required>
+  </div>
+
+  <div class="form-group">
     <label for="patient_gender">Gender:</label>
     <select class="form-control" id="patient_gender" name="patient_gender" required>
         <option value="M" selected>Male</option>

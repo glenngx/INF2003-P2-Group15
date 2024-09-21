@@ -41,6 +41,10 @@ def register():
         password = request.form['password']
         address = request.form.get('address')  # Optional field
         contact_number = request.form.get('contact_number')  # Optional field
+        name = request.form.get('name')  # New field for actual name
+        nric = request.form.get('nric')  # New field for NRIC
+        gender = request.form.get('gender')  # New field for gender
+        dob = request.form.get('dob')  # New field for DOB
         is_staff = 1 if 'is_staff' in request.form else 0
         
         # Validate address and phone number
@@ -76,9 +80,9 @@ def register():
         # Insert a corresponding record into the Patients table with NULL values if the user is not staff
         if not is_staff:
             cursor.execute("""
-                INSERT INTO Patients (UserID, PatientName, PatientGender, PatientHeight, PatientWeight, PatientDOB, PatientConditions)
-                VALUES (%s, NULL, NULL, NULL, NULL, NULL, NULL)
-            """, (user_id,))
+                INSERT INTO Patients (UserID, PatientName, NRIC, PatientGender, PatientHeight, PatientWeight, PatientDOB, PatientConditions)
+                VALUES (%s, %s, %s, %s, NULL, NULL, %s, NULL)
+            """, (user_id, name, nric, gender, dob))
             connection.commit()
 
         cursor.close()
@@ -138,6 +142,7 @@ def edit_patient(patient_id):
 
     if request.method == 'POST':
         patient_name = request.form['patient_name']
+        nric = request.form['nric']  # New NRIC field
         patient_gender = request.form['patient_gender']
         patient_height = request.form['patient_height']
         patient_weight = request.form['patient_weight']
@@ -147,10 +152,10 @@ def edit_patient(patient_id):
         try:
             cursor.execute("""
                 UPDATE Patients
-                SET PatientName = %s, PatientGender = %s, PatientHeight = %s, 
+                SET PatientName = %s, NRIC = %s, PatientGender = %s, PatientHeight = %s, 
                     PatientWeight = %s, PatientDOB = %s, PatientConditions = %s
                 WHERE UserID = %s
-            """, (patient_name, patient_gender, patient_height, patient_weight,
+            """, (patient_name, nric, patient_gender, patient_height, patient_weight,
                   patient_dob, patient_conditions, patient_id))
             connection.commit()
             flash('Patient details updated successfully!', 'success')
