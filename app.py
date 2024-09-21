@@ -362,7 +362,7 @@ def staff_dashboard():
         connection.close()
         return render_template('staff_dashboard.html', patients=patients)
     else:
-        flash('You do not have access to this page.')
+        flash('Please login or create a new account to access our services.')
         return redirect(url_for('login'))
 
 # Patient Dashboard route
@@ -394,7 +394,7 @@ def patient_dashboard():
 
         return render_template('patient_dashboard.html', user=user, patient=patient, appointments=appointments)
     else:
-        flash('You do not have access to this page.')
+        flash('Please login or create a new account to access our services.')
         return redirect(url_for('login'))
 
 if __name__ == '__main__':
