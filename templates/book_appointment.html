@@ -28,12 +28,19 @@
         <form method="POST" action="{{ url_for('book_appointment') }}">
             <div class="form-group">
                 <label for="appt_date">Appointment Date</label>
-                <input type="date" class="form-control" id="appt_date" name="appt_date" required>
+                <input type="date" id="appt_date" name="appt_date" class="form-control"
+                    min="{{ min_date.strftime('%Y-%m-%d') }}"
+                    max="{{ max_date.strftime('%Y-%m-%d') }}" required>
             </div>
             <div class="form-group">
                 <label for="appt_time">Appointment Time</label>
-                <input type="time" class="form-control" id="appt_time" name="appt_time" required>
-            </div>
+                <select class="form-control" id="appt_time" name="appt_time" required>
+                    {% for hour in range(8, 17) %}  <!-- 8am to 5pm -->
+                        {% for minute in ['00', '30'] %} <!-- restrict to 30 min intervals -->
+                            <option value="{{ '%02d' % hour }}:{{ minute }}">{{ '%02d' % hour }}:{{ minute }}</option>
+                        {% endfor %}
+                    {% endfor %}
+                </select>
             <div class="form-group">
                 <label for="appt_reason">Reason for Appointment</label>
                 <textarea class="form-control" id="appt_reason" name="appt_reason" rows="3" required></textarea>

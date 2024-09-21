@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash
 import re
 import mysql.connector
-from datetime import datetime
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -204,6 +204,10 @@ def book_appointment():
         flash('Staff members cannot book appointments.')
         return redirect(url_for('staff_dashboard'))
 
+    # Get the current date and the date one week from now
+    today = datetime.now().date()
+    one_week_later = today + timedelta(days=7)
+
     if request.method == 'POST':
         # Collect form data
         appt_date = request.form.get('appt_date')
@@ -219,13 +223,22 @@ def book_appointment():
         try:
             appt_date_obj = datetime.strptime(appt_date, '%Y-%m-%d').date()
             appt_time_obj = datetime.strptime(appt_time, '%H:%M').time()
+            # Ensure the appointment is in 30-minute intervals
+            if appt_time_obj.minute not in [0, 30]:
+                flash('Appointments must be booked at 30-minute intervals.')
+                return redirect(url_for('book_appointment'))
         except ValueError:
             flash('Invalid date or time format.')
             return redirect(url_for('book_appointment'))
 
-        # Optional: Add more validations, e.g., appointment in the future
+        # Validation for if patient books invalid time for appointment
         if appt_date_obj < datetime.today().date():
             flash('Appointment date must be in the future.')
+            return redirect(url_for('book_appointment'))
+
+        # Validation for appointment date range
+        if appt_date_obj < today or appt_date_obj > one_week_later:
+            flash('Appointments can only be booked within the next 7 days.')
             return redirect(url_for('book_appointment'))
 
         # Connect to the database
@@ -242,6 +255,17 @@ def book_appointment():
                 return redirect(url_for('patient_dashboard'))
 
             patient_id = patient[0]
+
+            # Check if the appointment slot is available
+            cursor.execute("""
+                SELECT COUNT(*) FROM Appointments 
+                WHERE ApptDate = %s AND ApptTime = %s
+            """, (appt_date_obj, appt_time_obj))
+            existing_appointments = cursor.fetchone()[0]
+
+            if existing_appointments > 0:
+                flash('This appointment slot is already taken. Please choose another time.')
+                return redirect(url_for('book_appointment'))
 
             # Insert the appointment into the Appointments table
             cursor.execute("""
@@ -262,7 +286,7 @@ def book_appointment():
             cursor.close()
             connection.close()
 
-    return render_template('book_appointment.html')
+    return render_template('book_appointment.html', min_date=today, max_date=one_week_later)
 
 # User logout route
 @app.route('/logout')
