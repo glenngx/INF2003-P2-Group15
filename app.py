@@ -30,7 +30,14 @@ def is_valid_sg_phone(phone):
 
 @app.route('/')
 def index():
-    return redirect('login')
+    # Check if the user is logged in (session contains user information)
+    if 'username' in session:
+        # Redirect based on user role (is_staff)
+        if session.get('is_staff') == 1:
+            return redirect(url_for('staff_dashboard'))
+        else:
+            return redirect(url_for('patient_dashboard'))
+    return redirect(url_for('login'))
 
 # User registration route
 @app.route('/register', methods=['GET', 'POST'])
@@ -96,6 +103,13 @@ def register():
 # User login route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # If user is already logged in, redirect to appropriate dashboard
+    if 'username' in session:
+        if session.get('is_staff') == 1:
+            return redirect(url_for('staff_dashboard'))
+        else:
+            return redirect(url_for('patient_dashboard'))
+        
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
