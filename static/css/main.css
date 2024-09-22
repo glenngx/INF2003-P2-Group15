@@ -4,6 +4,14 @@
     padding: 0;
 }
 
+:root{
+    --color-primary: #4A90E2;
+    --color-secondary: #F4F4F4;
+    --color-tertiary: #2C3E50;
+    --color-off-black: #343434;
+    --color-white: #FFFFFF;
+}
+
 body {
     width: 100%;
     height: 100%;
@@ -15,6 +23,8 @@ h1 {
     font-size: 48px;
     margin-bottom: 24px;
 }
+
+.btn-primary{background-color:var(--color-primary);}
 
 .navbar{
     padding-right: 100px;
