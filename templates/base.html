@@ -31,9 +31,9 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link {% if request.path == url_for('staff_dashboard') or request.path == url_for('patient_dashboard') %}active{% endif %}" href="{% if session['is_staff'] == 1 %}{{ url_for('staff_dashboard') }}{% else %}{{ url_for('patient_dashboard') }}{% endif %}">
+                    <a class="nav-link {% if request.path == url_for('staff_dashboard') or request.path == url_for('patient_dashboard') or request.path == '/login' %}active{% endif %}" href="{% if session['is_staff'] == 1 %}{{ url_for('staff_dashboard') }}{% else %}{{ url_for('patient_dashboard') }}{% endif %}">
                         Home
-                    </a>
+                    </a>                    
                 </li>
                 {% if not session['username'] %}
                 <li class="nav-item">
