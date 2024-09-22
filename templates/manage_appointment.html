@@ -9,6 +9,7 @@
             <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
                 {{ message }}
             </div>
+        {% endfor %}
     {% endif %}
 {% endwith %}
 
