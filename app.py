@@ -427,8 +427,16 @@ def medications():
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
-        # Fetch all medications from the Medications table
-        cursor.execute("SELECT * FROM Medications")
+        # Get the search query from the URL parameters (GET request)
+        search_query = request.args.get('search')
+
+        if search_query:
+            # If there's a search query, filter medications by the name using SQL LIKE
+            cursor.execute("SELECT * FROM Medications WHERE name LIKE %s", ('%' + search_query + '%',))
+        else:
+            # Otherwise, fetch all medications
+            cursor.execute("SELECT * FROM Medications")
+
         medications = cursor.fetchall()
 
         cursor.close()
@@ -438,6 +446,7 @@ def medications():
     else:
         flash('Please login to view the list of medications.')
         return redirect(url_for('login'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)
