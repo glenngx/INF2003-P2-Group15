@@ -1,0 +1,24 @@
+h1 {
+    margin-top: 32px;
+}
+
+.container-fluid {
+    text-align: center;
+}
+
+.container-content {
+    margin: 0 20vw;
+}
+
+table {
+    text-align: left;
+}
+
+td {
+    vertical-align:middle;
+}
+
+.table {
+    --bs-table-striped-bg: rgba(74, 144, 226, 0.1);
+    border-color: #dbe9f9;
+}
