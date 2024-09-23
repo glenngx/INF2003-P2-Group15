@@ -187,6 +187,7 @@ def edit_patient(patient_id):
         username = request.form['username']
         contact_number = request.form['contact_number']
         address = request.form['address']
+        password = request.form.get('password')
 
         # Validate NRIC format
         if not is_valid_nric(nric):
@@ -228,6 +229,14 @@ def edit_patient(patient_id):
                         PatientWeight = %s, PatientDOB = %s, PatientConditions = %s
                     WHERE UserID = %s
                 """, (patient_name, nric, patient_gender, patient_height, patient_weight, patient_dob, patient_conditions, patient_id))
+                
+                if password:  # Only update password if it's provided
+                    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+                    cursor.execute("""
+                        UPDATE Users
+                        SET Password = %s
+                        WHERE UserID = %s
+                    """, (hashed_password, patient_id))
 
                 cursor.execute("""
                     UPDATE Users
