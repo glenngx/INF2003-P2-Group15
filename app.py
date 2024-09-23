@@ -29,6 +29,11 @@ def is_valid_sg_phone(phone):
     """Check if the phone number is a valid Singapore number (starts with 6, 8, or 9 and is 8 digits long)."""
     return re.match(r'^[689]\d{7}$', phone) is not None
 
+# Validate NRIC format
+def is_valid_nric(nric):
+    """Check if the NRIC is valid: starts with (S,T,F,G,M), followed by 7 digits and one letter."""
+    return re.match(r'^[STFGMstfgm]\d{7}[A-Za-z]$', nric)
+
 @app.route('/')
 def index():
     # Check if the user is logged in (session contains user information)
@@ -61,19 +66,32 @@ def register():
             flash('Invalid Singapore address. Please provide a valid address with a 6-digit postal code.')
             return redirect(url_for('register'))
 
+        # Validate phone number
         if contact_number and not is_valid_sg_phone(contact_number):
             flash('Invalid Singapore phone number. Please provide a valid 8-digit number starting with 6, 8, or 9.')
+            return redirect(url_for('register'))
+        
+        # Validate NRIC format
+        if not is_valid_nric(nric):
+            flash('Invalid NRIC format. It must start with S, T, F, G, or M, followed by 7 digits and one letter.')
             return redirect(url_for('register'))
 
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        # Check if email already exists
+        # Check if email or nric already exists
         cursor.execute("SELECT * FROM Users WHERE Email = %s", (email,))
         user = cursor.fetchone()
+        
+        cursor.execute("SELECT * FROM Patients WHERE NRIC = %s", (nric,))
+        existing_nric = cursor.fetchone()
 
         if user:
             flash('Email already registered. Please try a different email.')
+            return redirect(url_for('register'))
+        
+        if existing_nric:
+            flash('NRIC already registered. Please try a different NRIC.')
             return redirect(url_for('register'))
 
         # Insert new user into the database
@@ -155,45 +173,129 @@ def edit_patient(patient_id):
 
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
+    errors = {}
 
     if request.method == 'POST':
         patient_name = request.form['patient_name']
-        nric = request.form['nric']  # New NRIC field
+        nric = request.form['nric']
         patient_gender = request.form['patient_gender']
         patient_height = request.form['patient_height']
         patient_weight = request.form['patient_weight']
         patient_dob = request.form['patient_dob']
         patient_conditions = request.form['patient_conditions']
+        email = request.form['email']
+        username = request.form['username']
+        contact_number = request.form['contact_number']
+        address = request.form['address']
+        password = request.form.get('password')
 
-        try:
-            cursor.execute("""
-                UPDATE Patients
-                SET PatientName = %s, NRIC = %s, PatientGender = %s, PatientHeight = %s, 
-                    PatientWeight = %s, PatientDOB = %s, PatientConditions = %s
-                WHERE UserID = %s
-            """, (patient_name, nric, patient_gender, patient_height, patient_weight,
-                  patient_dob, patient_conditions, patient_id))
-            connection.commit()
-            flash('Patient details updated successfully!', 'success')
-        except mysql.connector.Error as err:
-            flash(f'An error occurred: {err}', 'danger')
+        # Validate NRIC format
+        if not is_valid_nric(nric):
+            errors['nric'] = 'Invalid NRIC format. It must start with S, T, F, G, or M, followed by 7 digits and one letter.'
 
-        return redirect(url_for('staff_dashboard'))
+        # Validate phone number
+        if not is_valid_sg_phone(contact_number):
+            errors['contact_number'] = 'Invalid phone number format. It must start with 6, 8, or 9 and be 8 digits long.'
+
+        # Validate address for Singapore postal code
+        if not is_valid_sg_address(address):
+            errors['address'] = 'Invalid address. Please include a valid 6-digit postal code.'
+
+        # Check for duplicates in the database
+        cursor.execute("SELECT * FROM Users WHERE (Email = %s OR ContactNumber = %s OR Username = %s) AND UserID != %s",
+                       (email, contact_number, username, patient_id))
+        existing_user = cursor.fetchone()
+
+        cursor.execute("SELECT * FROM Patients WHERE NRIC = %s AND UserID != %s", (nric, patient_id))
+        existing_nric = cursor.fetchone()
+
+        if existing_user:
+            if existing_user['Email'] == email:
+                errors['email'] = 'Email is already in use.'
+            if existing_user['ContactNumber'] == contact_number:
+                errors['contact_number'] = 'Contact number is already in use.'
+            if existing_user['Username'] == username:
+                errors['username'] = 'Username is already in use.'
+
+        if existing_nric:
+            errors['nric'] = 'NRIC is already in use.'
+
+        # If no errors, update the patient details in the database
+        if not errors:
+            try:
+                cursor.execute("""
+                    UPDATE Patients
+                    SET PatientName = %s, NRIC = %s, PatientGender = %s, PatientHeight = %s, 
+                        PatientWeight = %s, PatientDOB = %s, PatientConditions = %s
+                    WHERE UserID = %s
+                """, (patient_name, nric, patient_gender, patient_height, patient_weight, patient_dob, patient_conditions, patient_id))
+                
+                if password:  # Only update password if it's provided
+                    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+                    cursor.execute("""
+                        UPDATE Users
+                        SET Password = %s
+                        WHERE UserID = %s
+                    """, (hashed_password, patient_id))
+
+                cursor.execute("""
+                    UPDATE Users
+                    SET Username = %s, Email = %s, ContactNumber = %s, Address = %s
+                    WHERE UserID = %s
+                """, (username, email, contact_number, address, patient_id))
+
+                connection.commit()
+                flash('Patient details updated successfully!', 'success')
+                return redirect(url_for('staff_dashboard'))
+            except mysql.connector.Error as err:
+                flash(f'An error occurred: {err}', 'danger')
 
     # Fetch patient details
     cursor.execute("SELECT * FROM Patients WHERE UserID = %s", (patient_id,))
     patient = cursor.fetchone()
 
+    # Fetch user details (related to patient)
+    cursor.execute("SELECT * FROM Users WHERE UserID = %s", (patient_id,))
+    user = cursor.fetchone()
+
     cursor.close()
     connection.close()
 
-    if patient:
-        return render_template('edit_patient.html', patient=patient)
-    else:
-        flash('Patient not found.', 'danger')
-        return redirect(url_for('staff_dashboard'))
+    return render_template('edit_patient.html', patient=patient, user=user, errors=errors)
 
 
+# Delete patient records
+@app.route('/delete_patient/<int:patient_id>', methods=['POST'])
+def delete_patient(patient_id):
+    if 'is_staff' not in session or session['is_staff'] != 1:
+        flash('You do not have access to this page.')
+        return redirect(url_for('login'))
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        # First delete the patient's appointments
+        cursor.execute("DELETE FROM Appointments WHERE PatientID = (SELECT PatientID FROM Patients WHERE UserID = %s)", (patient_id,))
+
+        # Then delete the patient from the Patients table
+        cursor.execute("DELETE FROM Patients WHERE UserID = %s", (patient_id,))
+
+        # Finally, delete the user from the Users table
+        cursor.execute("DELETE FROM Users WHERE UserID = %s", (patient_id,))
+
+        connection.commit()
+        flash('Patient and associated appointments deleted successfully!', 'success')
+    except mysql.connector.Error as err:
+        connection.rollback()
+        flash(f'An error occurred: {err}', 'danger')
+
+    cursor.close()
+    connection.close()
+
+    return redirect(url_for('staff_dashboard'))
+
+# Route to book and view appointment
 @app.route('/book_appointment', methods=['GET', 'POST'])
 def book_appointment():
     if 'user_id' not in session:
@@ -342,8 +444,13 @@ def update_account():
         flash('Account updated successfully!', 'success')
         return redirect(url_for('update_account'))
 
-    # Fetch the current user's data
-    cursor.execute("SELECT * FROM Users WHERE UserID = %s", (session['user_id'],))
+    # Fetch the current user's data (join Users and Patients tables)
+    cursor.execute("""
+        SELECT u.Username, u.Email, u.Password, u.Address, u.ContactNumber, p.PatientName, p.NRIC, p.PatientGender, p.PatientDOB
+        FROM Users u
+        LEFT JOIN Patients p ON u.UserID = p.UserID
+        WHERE u.UserID = %s
+    """, (session['user_id'],))
     user = cursor.fetchone()
     cursor.close()
     connection.close()
@@ -378,8 +485,15 @@ def staff_dashboard():
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        # Fetch all patients (IsStaff = 0)
-        cursor.execute("SELECT * FROM Users WHERE IsStaff = 0")
+        # Fetch all patients and their related user details
+        cursor.execute("""
+            SELECT u.UserID, u.Username, u.Email, u.Address, u.ContactNumber, 
+                   p.PatientName, p.NRIC, p.PatientGender, p.PatientHeight, 
+                   p.PatientWeight, p.PatientDOB, p.PatientConditions
+            FROM Users u
+            LEFT JOIN Patients p ON u.UserID = p.UserID
+            WHERE u.IsStaff = 0
+        """)
         patients = cursor.fetchall()
 
         cursor.close()
@@ -388,6 +502,7 @@ def staff_dashboard():
     else:
         flash('Please login or create a new account to access our services.')
         return redirect(url_for('login'))
+
 
 # Patient Dashboard route
 @app.route('/patient_dashboard')
@@ -427,8 +542,16 @@ def medications():
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
 
-        # Fetch all medications from the Medications table
-        cursor.execute("SELECT * FROM Medications")
+        # Get the search query from the URL parameters (GET request)
+        search_query = request.args.get('search')
+
+        if search_query:
+            # If there's a search query, filter medications by the name using SQL LIKE
+            cursor.execute("SELECT * FROM Medications WHERE name LIKE %s", ('%' + search_query + '%',))
+        else:
+            # Otherwise, fetch all medications
+            cursor.execute("SELECT * FROM Medications")
+
         medications = cursor.fetchall()
 
         cursor.close()

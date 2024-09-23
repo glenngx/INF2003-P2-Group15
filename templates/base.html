@@ -19,7 +19,7 @@
     <div class="container-fluid">
         <!-- Branding / Logo -->
         <a class="navbar-brand" href="{% if session['is_staff'] == 1 %}{{ url_for('staff_dashboard') }}{% else %}{{ url_for('patient_dashboard') }}{% endif %}">
-            User Management
+            ABC Clinic
         </a>
 
         <!-- Hamburger menu toggle button for mobile screens -->

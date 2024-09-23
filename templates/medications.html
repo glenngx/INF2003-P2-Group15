@@ -10,6 +10,14 @@
         <div class="leftcolbg"></div>
         <h1>List of Medications</h1>
 
+        <!-- Search Form -->
+        <form method="GET" action="/medications" class="mb-3">
+            <div class="input-group">
+                <input type="text" class="form-control" name="search" placeholder="Search by medication name" value="{{ request.args.get('search') }}">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </form>
+
         <!-- Display Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=True) %}
         {% if messages %}
@@ -44,6 +52,10 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        {% if medications|length == 0 %}
+            <p>No medications found.</p>
+        {% endif %}
     </div>
     <div class="column rightcol"></div>
 </div>

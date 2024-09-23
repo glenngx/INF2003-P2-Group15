@@ -35,7 +35,7 @@
     </div>
     <div class="mb-3">
         <label for="nric" class="form-label">NRIC</label>
-        <input type="text" class="form-control" id="nric" name="nric" required>
+        <input type="text" class="form-control" id="nric" name="nric" pattern="^[STFGM]\d{7}[A-Z]$" title="NRIC must start with S, T, F, G, or M, followed by 7 digits and a letter." required>
     </div>
     <div class="mb-3">
         <label for="dob" class="form-label">Date of Birth</label>
