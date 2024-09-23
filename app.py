@@ -264,6 +264,38 @@ def edit_patient(patient_id):
     return render_template('edit_patient.html', patient=patient, user=user, errors=errors)
 
 
+# Delete patient records
+@app.route('/delete_patient/<int:patient_id>', methods=['POST'])
+def delete_patient(patient_id):
+    if 'is_staff' not in session or session['is_staff'] != 1:
+        flash('You do not have access to this page.')
+        return redirect(url_for('login'))
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        # First delete the patient's appointments
+        cursor.execute("DELETE FROM Appointments WHERE PatientID = (SELECT PatientID FROM Patients WHERE UserID = %s)", (patient_id,))
+
+        # Then delete the patient from the Patients table
+        cursor.execute("DELETE FROM Patients WHERE UserID = %s", (patient_id,))
+
+        # Finally, delete the user from the Users table
+        cursor.execute("DELETE FROM Users WHERE UserID = %s", (patient_id,))
+
+        connection.commit()
+        flash('Patient and associated appointments deleted successfully!', 'success')
+    except mysql.connector.Error as err:
+        connection.rollback()
+        flash(f'An error occurred: {err}', 'danger')
+
+    cursor.close()
+    connection.close()
+
+    return redirect(url_for('staff_dashboard'))
+
+# Route to book and view appointment
 @app.route('/book_appointment', methods=['GET', 'POST'])
 def book_appointment():
     if 'user_id' not in session:
