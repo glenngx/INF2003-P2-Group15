@@ -13,27 +13,49 @@
     {% endif %}
 {% endwith %}
 <form action="/update_account" method="post">
+    <!-- Patient details (read-only) -->
+    <div class="mb-3">
+        <label for="patient_name" class="form-label">Name</label>
+        <p id="patient_name_msg" class="text-danger d-none">Please inform the staff to update personal particulars.</p>
+        <input type="text" class="form-control" id="patient_name" value="{{ user[5] }}" readonly onclick="showMessage('patient_name_msg')">
+    </div>
+    <div class="mb-3">
+        <label for="nric" class="form-label">NRIC</label>
+        <p id="nric_msg" class="text-danger d-none">Please inform the staff to update personal particulars.</p>
+        <input type="text" class="form-control" id="nric" value="{{ user[6] }}" readonly onclick="showMessage('nric_msg')">
+    </div>
+    <div class="mb-3">
+        <label for="gender" class="form-label">Gender</label>
+        <p id="gender_msg" class="text-danger d-none">Please inform the staff to update personal particulars.</p>
+        <input type="text" class="form-control" id="gender" value="{{ user[7] }}" readonly onclick="showMessage('gender_msg')">
+    </div>
+    <div class="mb-3">
+        <label for="dob" class="form-label">Date of Birth</label>
+        <p id="dob_msg" class="text-danger d-none">Please inform the staff to update personal particulars.</p>
+        <input type="date" class="form-control" id="dob" value="{{ user[8] }}" readonly onclick="showMessage('dob_msg')">
+    </div>
+
     <div class="mb-3">
         <label for="username" class="form-label">Username</label>
-        <input type="text" class="form-control" id="username" name="username" value="{{ user[1] }}" required>
+        <input type="text" class="form-control" id="username" name="username" value="{{ user[0] }}" required>
     </div>
     <div class="mb-3">
         <label for="email" class="form-label">Email</label>
-        <input type="email" class="form-control" id="email" name="email" value="{{ user[2] }}" required>
+        <input type="email" class="form-control" id="email" name="email" value="{{ user[1] }}" required>
     </div>
     <div class="mb-3">
         <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" name="password" value="{{ user[3] }}" required>
+        <input type="password" class="form-control" id="password" name="password" value="{{ user[2] }}" required>
     </div>
     <div class="mb-3">
         <label for="address" class="form-label">Address</label>
-        <input type="text" class="form-control" id="address" name="address" value="{{ user[4] }}">
+        <input type="text" class="form-control" id="address" name="address" value="{{ user[3] }}">
     </div>
     <div class="mb-3">
         <label for="contact_number" class="form-label">Contact Number</label>
         <div class="input-group">
             <span class="input-group-text">+65</span>
-        <input type="text" class="form-control" id="contact_number" name="contact_number" value="{{ user[5] }}">
+        <input type="text" class="form-control" id="contact_number" name="contact_number" value="{{ user[4] }}">
         </div>
     </div>
     <!-- <div class="form-check mb-3">
@@ -58,4 +80,15 @@
         }
     }, 3000);  // 3000 milliseconds = 3 seconds
 </script>
+
+<!-- JavaScript to show the message when the read-only fields are clicked -->
+<script>
+    function showMessage(id) {
+        const messageElement = document.getElementById(id);
+        messageElement.classList.remove('d-none');  // Show the message
+        setTimeout(function() {
+            messageElement.classList.add('d-none');  // Hide the message after 3 seconds
+        }, 3000);
+    }
+    </script>
 {% endblock %}

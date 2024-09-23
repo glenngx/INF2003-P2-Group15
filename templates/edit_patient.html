@@ -19,16 +19,51 @@
 
   <div class="form-group">
     <label for="nric">NRIC:</label>
+    {% if errors.nric %}
+      <div class="text-danger error-message">{{ errors.nric }}</div>
+    {% endif %}
     <input type="text" class="form-control" id="nric" name="nric" value="{{ patient.NRIC or '' }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="email">Email:</label>
+    {% if errors.email %}
+      <div class="text-danger error-message">{{ errors.email }}</div>
+    {% endif %}
+    <input type="email" class="form-control" id="email" name="email" value="{{ user.Email or '' }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="username">Username:</label>
+    {% if errors.username %}
+      <div class="text-danger error-message">{{ errors.username }}</div>
+    {% endif %}
+    <input type="text" class="form-control" id="username" name="username" value="{{ user.Username or '' }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="contact_number">Contact Number:</label>
+    {% if errors.contact_number %}
+      <div class="text-danger error-message">{{ errors.contact_number }}</div>
+    {% endif %}
+    <input type="text" class="form-control" id="contact_number" name="contact_number" value="{{ user.ContactNumber or '' }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="address">Address:</label>
+    {% if errors.address %}
+      <div class="text-danger error-message">{{ errors.address }}</div>
+    {% endif %}
+    <input type="text" class="form-control" id="address" name="address" value="{{ user.Address or '' }}" required>
   </div>
 
   <div class="form-group">
     <label for="patient_gender">Gender:</label>
     <select class="form-control" id="patient_gender" name="patient_gender" required>
-        <option value="M" selected>Male</option>
-        <option value="F">Female</option>
+        <option value="M" {% if patient.PatientGender == 'M' %}selected{% endif %}>Male</option>
+        <option value="F" {% if patient.PatientGender == 'F' %}selected{% endif %}>Female</option>
     </select>
-    </div>
+  </div>
 
   <div class="form-group">
     <label for="patient_height">Height (m):</label>
@@ -52,4 +87,14 @@
 
   <button type="submit" class="btn btn-primary">Update Patient Details</button>
 </form>
+
+<script>
+  // Hide the error message after 3 seconds
+  setTimeout(function() {
+    const errorMessages = document.querySelectorAll('.error-message');
+    errorMessages.forEach(function(errorMessage) {
+      errorMessage.style.display = 'none';
+    });
+  }, 3000);  // 3000 milliseconds = 3 seconds
+</script>
 {% endblock %}
