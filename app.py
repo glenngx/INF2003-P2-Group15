@@ -403,7 +403,6 @@ def update_account():
         flash('Account updated successfully!', 'success')
         return redirect(url_for('update_account'))
 
-    # Fetch the current user's data
     # Fetch the current user's data (join Users and Patients tables)
     cursor.execute("""
         SELECT u.Username, u.Email, u.Password, u.Address, u.ContactNumber, p.PatientName, p.NRIC, p.PatientGender, p.PatientDOB
