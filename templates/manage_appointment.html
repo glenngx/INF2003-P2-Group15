@@ -34,6 +34,8 @@
             <td>{{ appointment[3] }}</td>  <!-- ApptTime -->
             <td>{{ appointment[4] }}</td>  <!-- AppStatus -->
             <td>{{ appointment[5] }}</td>  <!-- AppReason -->
+            <td><a href="{{ url_for('view_patient', patient_id=appointment[1], appt_id=appointment[0]) }}" class="btn btn-primary">View
+                Patient</a></td>
             <td><a href="" class="btn btn-primary">Edit Appointment</a></td>
         </tr>
         {% endfor %}

@@ -439,5 +439,62 @@ def medications():
         flash('Please login to view the list of medications.')
         return redirect(url_for('login'))
 
+from datetime import datetime, timedelta
+
+@app.route('/manage_appointment')
+def manage_appointment():
+    if 'is_staff' in session and session['is_staff'] == 1:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Calculate the date range for the next 7 days
+        start_date = datetime.now()
+        end_date = start_date + timedelta(days=7)
+
+        # Fetch appointments in the next 7 days
+        cursor.execute("""
+            SELECT * FROM Appointments 
+            WHERE ApptDate BETWEEN %s AND %s
+        """, (start_date.date(), end_date.date()))
+        appointments = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+        return render_template('manage_appointment.html', appointments=appointments)
+    else:
+        flash('Please login or create a new account to access our services.')
+
+@app.route('/view_patient/<int:patient_id>/<int:appt_id>', methods=['GET', 'POST'])
+def view_patient(patient_id, appt_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    if request.method == 'POST':
+        # Save the diagnosis and notes
+        diagnosis = request.form['diagnosis']
+        notes = request.form['notes']
+        date = datetime.now()
+
+        # Insert into PatientHistory
+        cursor.execute("""
+            INSERT INTO PatientHistory (PatientID, ApptID, diagnosis, notes, date) 
+            VALUES (%s, %s, %s, %s, %s)
+        """, (patient_id, appt_id, diagnosis, notes, date))
+
+        connection.commit()
+        flash('Patient history updated successfully!', 'success')
+
+    # Fetch patient information
+    cursor.execute("SELECT * FROM Patients WHERE PatientID = %s", (patient_id,))
+    patient_info = cursor.fetchone()
+
+    # Fetch patient's past diagnoses
+    cursor.execute("SELECT * FROM PatientHistory WHERE PatientID = %s", (patient_id,))
+    patient_history = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+    return render_template('view_patient.html', patient=patient_info, history=patient_history, appt_id=appt_id)
+
 if __name__ == '__main__':
     app.run(debug=True)
