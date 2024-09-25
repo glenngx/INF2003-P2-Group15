@@ -479,29 +479,90 @@ def delete_account():
     return redirect(url_for('register'))
 
 # Staff Dashboard route
-@app.route('/staff_dashboard')
+@app.route('/staff_dashboard', methods=['GET'])
 def staff_dashboard():
     if 'is_staff' in session and session['is_staff'] == 1:
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        # Fetch all patients and their related user details
-        cursor.execute("""
+        # Get filter values from the request (GET parameters)
+        user_id = request.args.get('user_id', '')
+        username = request.args.get('username', '')
+        email = request.args.get('email', '')
+        address = request.args.get('address', '')
+        contact_number = request.args.get('contact_number', '')
+        name = request.args.get('name', '')
+        nric = request.args.get('nric', '')
+        gender = request.args.get('gender', '')
+        height = request.args.get('height', '')
+        weight = request.args.get('weight', '')
+        dob = request.args.get('dob', '')
+
+        # Start building the SQL query
+        query = """
             SELECT u.UserID, u.Username, u.Email, u.Address, u.ContactNumber, 
                    p.PatientName, p.NRIC, p.PatientGender, p.PatientHeight, 
                    p.PatientWeight, p.PatientDOB, p.PatientConditions
             FROM Users u
             LEFT JOIN Patients p ON u.UserID = p.UserID
             WHERE u.IsStaff = 0
-        """)
+        """
+        
+        filters = []
+        params = []
+
+        # Add filters dynamically if they exist
+        if user_id:
+            filters.append("u.UserID = %s")
+            params.append(user_id)
+        if username:
+            filters.append("u.Username LIKE %s")
+            params.append(f"%{username}%")
+        if email:
+            filters.append("u.Email LIKE %s")
+            params.append(f"%{email}%")
+        if address:
+            filters.append("u.Address LIKE %s")
+            params.append(f"%{address}%")
+        if contact_number:
+            filters.append("u.ContactNumber LIKE %s")
+            params.append(f"%{contact_number}%")
+        if name:
+            filters.append("p.PatientName LIKE %s")
+            params.append(f"%{name}%")
+        if nric:
+            filters.append("p.NRIC LIKE %s")
+            params.append(f"%{nric}%")
+        if gender:
+            filters.append("p.PatientGender = %s")
+            params.append(gender)
+        if height:
+            filters.append("p.PatientHeight = %s")
+            params.append(height)
+        if weight:
+            filters.append("p.PatientWeight = %s")
+            params.append(weight)
+        if dob:
+            filters.append("p.PatientDOB = %s")
+            params.append(dob)
+
+        # If there are filters, append them to the query
+        if filters:
+            query += " AND " + " AND ".join(filters)
+
+        # Execute the query with parameters
+        cursor.execute(query, params)
         patients = cursor.fetchall()
 
         cursor.close()
         connection.close()
+
+        # Render the template with the filtered patient data
         return render_template('staff_dashboard.html', patients=patients)
     else:
         flash('Please login or create a new account to access our services.')
         return redirect(url_for('login'))
+
 
 
 # Patient Dashboard route
