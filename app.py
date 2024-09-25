@@ -538,6 +538,13 @@ def patient_dashboard():
 
 @app.route('/medications')
 def medications():
+
+        # Check if the user is logged in and is staff
+    if not session.get('is_staff') == 1:
+        # Show a flash message and redirect to the patient dashboard
+        flash("You do not have permission to access the Medication List.")
+        return redirect(url_for('patient_dashboard'))  # Redirect to patient_dashboard.html
+
     if 'is_staff' in session:  # You can modify the condition based on access control
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
