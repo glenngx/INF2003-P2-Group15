@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash
+from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
 import re
 import mysql.connector
 from datetime import datetime, timedelta
@@ -629,6 +629,78 @@ def medications():
     else:
         flash('Please login to view the list of medications.')
         return redirect(url_for('login'))
+
+@app.route('/advanced_search', methods=['POST'])
+def advanced_search():
+    if 'is_staff' not in session or session['is_staff'] != 1:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    # Get search parameters from the form
+    filters = {
+        'Username': request.form.get('username'),
+        'Email': request.form.get('email'),
+        'Address': request.form.get('address'),
+        'ContactNumber': request.form.get('contact_number'),
+        'PatientName': request.form.get('patient_name'),
+        'NRIC': request.form.get('nric'),
+        'PatientGender': request.form.get('gender'),
+        'PatientHeight': request.form.get('height'),
+        'PatientWeight': request.form.get('weight'),
+        'PatientDOB': request.form.get('dob'),
+        'PatientConditions': request.form.get('conditions')
+    }
+
+    query = """
+    SELECT u.UserID, u.Username, u.Email, u.Address, u.ContactNumber, 
+           p.PatientName, p.NRIC, p.PatientGender, p.PatientHeight, 
+           p.PatientWeight, p.PatientDOB, p.PatientConditions
+    FROM Users u
+    LEFT JOIN Patients p ON u.UserID = p.UserID
+    WHERE u.IsStaff = 0
+    """
+
+    conditions = []
+    params = []
+
+    for field, value in filters.items():
+        if value:
+            if field in ['Username', 'Email', 'Address', 'ContactNumber', 'PatientName', 'NRIC', 'PatientConditions']:
+                conditions.append(f"{field} LIKE %s")
+                params.append(f"%{value}%")
+            elif field == 'PatientGender':
+                gender_map = {'Male': 'M', 'Female': 'F'}
+                conditions.append(f"{field} = %s")
+                params.append(gender_map.get(value, value))
+            elif field in ['PatientHeight', 'PatientWeight']:
+                # Handle decimal values for height and weight
+                try:
+                    float_value = float(value)
+                    conditions.append(f"ABS({field} - %s) < 0.01")
+                    params.append(float_value)
+                except ValueError:
+                    # If the value is not a valid float, ignore this filter
+                    pass
+            elif field == 'PatientDOB':
+                conditions.append(f"{field} = %s")
+                params.append(value)
+
+    if conditions:
+        query += " AND " + " AND ".join(conditions)
+
+    query += " ORDER BY u.UserID"
+
+    # Execute the query
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute(query, params)
+    results = cursor.fetchall()
+    for result in results:  # exclude time from DOB for advanced search
+        if result['PatientDOB']:
+            result['PatientDOB'] = result['PatientDOB'].strftime('%Y-%m-%d')
+    cursor.close()
+    connection.close()
+
+    return jsonify(results)
 
 
 if __name__ == '__main__':
