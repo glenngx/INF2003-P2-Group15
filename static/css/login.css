@@ -4,11 +4,7 @@ body {
 }
 
 .navbar {
-    background-color: transparent !important;
-}
-
-.container-fluid{
-    margin-top: 0;
+    background-color: var(--color-white) !important;
 }
 
 .container {
@@ -52,15 +48,6 @@ body {
 .form-control {
     width: 320px;
 }
-
-.button-actions {
-    display: flex;
-    justify-content: space-between;
-    margin: 1.5rem 0 !important;
-}
-  
-.button-login{text-align: left;}
-.button-register{text-align: right;}
 
 @media only screen and (max-width: 640px) {
     h1 {

@@ -4,34 +4,21 @@ h1 {
 
 .container-fluid {
     text-align: center;
-    width: 100%;
 }
 
 .container-content {
-    width: 100% !important;
+    margin: 0 20vw;
 }
 
-.table-container {
-    max-height: 600px;
-    overflow-y: auto;
-    width: 100%;
-}
-
-.table {
-    width: 80vw;
-    margin: 0 auto;
+table {
     text-align: left;
-    --bs-table-striped-bg: rgba(74, 144, 226, 0.1);
-    border-color: #dbe9f9;
 }
 
 td {
-    vertical-align: middle;
+    vertical-align:middle;
 }
 
-@media only screen and (max-height: 640px) {
-    .table-container {
-        max-height: 70vh;
-    }
-    
+.table {
+    --bs-table-striped-bg: rgba(74, 144, 226, 0.1);
+    border-color: #dbe9f9;
 }

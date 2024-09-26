@@ -35,27 +35,20 @@
                     Please enter your password.
                 </div>
             </div>
-            <div class="mb-3 button-actions">
-                <div class="button-login">
-                    <button type="submit" class="btn btn-primary">Login</button>
-                </div>
-                <div class="button-register">
-                    <button type="button" class="btn btn-outline-primary" onclick="window.location.href='/register'">Register</button>
-                </div>
-            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
         </form>
     </div>
     <div class="column rightcol"></div>
 </div>
 
 <!-- Display Flash Messages for Invalid Credentials -->
-<!-- {% with messages = get_flashed_messages() %}
+{% with messages = get_flashed_messages() %}
     {% if messages %}
         <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
             {{ messages[0] }}
         </div>
     {% endif %}
-{% endwith %} -->
+{% endwith %}
 
 <script>
 // JavaScript to enable Bootstrap validation styling
