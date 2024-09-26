@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash
+from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
 import re
 import mysql.connector
 from datetime import datetime, timedelta
@@ -593,23 +593,48 @@ def view_patient(patient_id, appt_id):
     cursor = connection.cursor()
 
     if request.method == 'POST':
-        # Save the diagnosis and notes
-        diagnosis = request.form['diagnosis']
-        notes = request.form['notes']
-        date = datetime.now()
+        # Check if we are saving a prescription
+        if 'medication' in request.form:
+            medication_name = request.form['medication']
+            duration = request.form['duration']
+            notes = request.form['notes']
 
-        # Insert into PatientHistory
-        cursor.execute("""
-            INSERT INTO PatientHistory (PatientID, ApptID, diagnosis, notes, date) 
-            VALUES (%s, %s, %s, %s, %s)
-        """, (patient_id, appt_id, diagnosis, notes, date))
+            # Fetch the MedID based on medication name
+            cursor.execute("SELECT MedID FROM Medications WHERE name = %s", (medication_name,))
+            med = cursor.fetchone()
 
-        connection.commit()
-        flash('Patient history updated successfully!', 'success')
+            if med:
+                med_id = med[0]
+                # Insert into Prescriptions table
+                cursor.execute("""
+                    INSERT INTO Prescriptions (PatientID, ApptID, MedID, Dosage, Date, Notes) 
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (patient_id, appt_id, med_id, duration, datetime.now(), notes))
+                connection.commit()
+                flash('Prescription added successfully!', 'success')
+            else:
+                flash('Medication not found!', 'danger')
+
+        else:
+            # Save the diagnosis and notes (existing functionality)
+            diagnosis = request.form['diagnosis']
+            notes = request.form['notes']
+            date = datetime.now()
+
+            cursor.execute("""
+                INSERT INTO PatientHistory (PatientID, ApptID, diagnosis, notes, date) 
+                VALUES (%s, %s, %s, %s, %s)
+            """, (patient_id, appt_id, diagnosis, notes, date))
+
+            connection.commit()
+            flash('Patient history updated successfully!', 'success')
 
     # Fetch patient information
     cursor.execute("SELECT * FROM Patients WHERE PatientID = %s", (patient_id,))
     patient_info = cursor.fetchone()
+
+    # Make sure to consume any outstanding results
+    cursor.fetchall()  # This will clear any unread results, if they exist
 
     # Fetch patient's past diagnoses
     cursor.execute("SELECT * FROM PatientHistory WHERE PatientID = %s", (patient_id,))
@@ -618,6 +643,23 @@ def view_patient(patient_id, appt_id):
     cursor.close()
     connection.close()
     return render_template('view_patient.html', patient=patient_info, history=patient_history, appt_id=appt_id)
+
+@app.route('/fetch_medications')
+def fetch_medications():
+    query = request.args.get('query', '')
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    # Fetch medications that match the user's input
+    cursor.execute("SELECT * FROM Medications WHERE LOWER(name) LIKE %s", (f'%{query}%',))
+    medications = cursor.fetchall()
+    
+    cursor.close()
+    connection.close()
+    
+    # Prepare response data
+    medication_list = [{'name': med[1]} for med in medications] # Assuming index 1 corresponds to medication name
+    return jsonify(medication_list)
 
 if __name__ == '__main__':
     app.run(debug=True)

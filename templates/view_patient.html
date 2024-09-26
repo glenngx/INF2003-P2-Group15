@@ -37,6 +37,68 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <h3>Prescribe Medication</h3>
+    <form id="prescription_form" method="POST">
+        <div>
+            <label for="medication">Medication:</label>
+            <input type="text" name="medication" id="medication" onkeyup="fetchMedications()" required>
+            <ul id="medication_list" class="dropdown-list"></ul>
+        </div>
+        <div>
+            <label for="duration">Dosage:</label>
+            <input type="text" name="duration" id="duration" required>
+        </div>
+        <div>
+            <label for="notes">Notes:</label>
+            <textarea name="notes" id="notes"></textarea>
+        </div>
+        <input type="hidden" name="appt_id" value="{{ appt_id }}">
+        <input type="hidden" name="patient_id" value="{{ patient[0] }}"><!-- Assuming index 0 corresponds to PatientID -->
+        <button type="submit" class="btn btn-primary">Prescribe</button>
+    </form>
+    
+    <script>
+        async function fetchMedications() {
+            const input = document.getElementById('medication').value;
+
+            // Fetching the medication list based on input
+            const response = await fetch(`/fetch_medications?query=${input}`);
+            const medications = await response.json();
+
+            // Clear the dropdown list
+            const medicationList = document.getElementById('medication_list');
+            medicationList.innerHTML = '';
+
+            // Populate the dropdown list
+            medications.forEach(med => {
+                const li = document.createElement('li');
+                li.textContent = med.name; // Change to the appropriate field for display
+                li.onclick = function () {
+                    document.getElementById('medication').value = med.name; // Set input value to medication name
+                    medicationList.innerHTML = ''; // Clear the suggestion list
+                };
+                medicationList.appendChild(li);
+            });
+        }
+    </script>
+    
+    <style>
+        .dropdown-list {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            list-style-type: none;
+        }
+    
+        .dropdown-list li {
+            padding: 8px;
+            cursor: pointer;
+        }
+    
+        .dropdown-list li:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
 {% else %}
     <p>Patient not found.</p>
 {% endif %}
