@@ -17,7 +17,6 @@ h1 {
 .row {
     display: flex;
     justify-content: space-between;
-    height: 100%;
 }
 
 .column {
@@ -45,7 +44,7 @@ h1 {
     background-image: url(../images/pexels-alex-green-5699432.jpg);
     background-size: cover;
     background-repeat: none;
-    background-position: 90% 50%;
+    background-position: 89% 50%;
 }
 
 form {
@@ -70,6 +69,10 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 1rem;
+}
+
+#password, .mb-password {
+    margin-bottom: 0 !important;
 }
 
 .password-wrapper {
@@ -101,6 +104,7 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
 
 #contact_number {
     margin-top: 5px;
+    margin-bottom: 0 !important;
 }
 
 .input-group-text {
@@ -128,4 +132,15 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
     display:inline-flex;
     width: auto;
     float: right;
+    margin-top: 24px;
+}
+
+#register {
+    margin: 24px 0 16px 0;
+    width: 100%;
+}
+
+.login-hyperlink {
+    width: 100%;
+    text-align: center;
 }

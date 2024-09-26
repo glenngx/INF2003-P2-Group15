@@ -33,7 +33,7 @@
                         <label for="email" class="form-label">Email</label>
                         <input type="email" class="form-control" id="email" name="email" placeholder="janesmith@example.com" required>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3 mb-password">
                         <label for="password" class="form-label">Password</label>
                         <div class="password-wrapper">
                             <input type="password" class="form-control" id="password" name="password" placeholder="Enter Password" required>
@@ -43,7 +43,6 @@
                             Please enter your password.
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Register</button>
                 </div>
 
                 <div class="col-md-6">
@@ -70,9 +69,12 @@
                             <input type="text" class="form-control" id="contact_number" name="contact_number" placeholder="Enter Contact Number">
                         </div>
                     </div>
-                    <a href="/login" id="login" class="btn btn-outline-primary">Login</a>
                 </div>
             </div>
+            <div class="form-button">
+                <button type="submit" id="register" class="btn btn-primary">Register</button>
+            </div>
+            <p class="login-hyperlink">Already have an account? <a href="/login">Login</a></p>
         </form>
     </div>
 </div>

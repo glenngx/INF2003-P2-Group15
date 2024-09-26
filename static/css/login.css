@@ -53,18 +53,20 @@ body {
     width: 320px;
 }
 
-.button-actions {
+.form-button {
     display: flex;
-    justify-content: space-between;
-    margin: 1.5rem 0 !important;
+    justify-content: flex-start;
+    width: 100%;
+    padding-top: 24px;
 }
   
 .button-login {
-    text-align: left;
+    width: 100%;
 }
 
-.button-register {
-    text-align: right;
+.register-hyperlink {
+    width: 100%;
+    text-align: center;
 }
 
 .password-wrapper {
