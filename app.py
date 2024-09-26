@@ -479,29 +479,90 @@ def delete_account():
     return redirect(url_for('register'))
 
 # Staff Dashboard route
-@app.route('/staff_dashboard')
+@app.route('/staff_dashboard', methods=['GET'])
 def staff_dashboard():
     if 'is_staff' in session and session['is_staff'] == 1:
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        # Fetch all patients and their related user details
-        cursor.execute("""
+        # Get filter values from the request (GET parameters)
+        user_id = request.args.get('user_id', '')
+        username = request.args.get('username', '')
+        email = request.args.get('email', '')
+        address = request.args.get('address', '')
+        contact_number = request.args.get('contact_number', '')
+        name = request.args.get('name', '')
+        nric = request.args.get('nric', '')
+        gender = request.args.get('gender', '')
+        height = request.args.get('height', '')
+        weight = request.args.get('weight', '')
+        dob = request.args.get('dob', '')
+
+        # Start building the SQL query
+        query = """
             SELECT u.UserID, u.Username, u.Email, u.Address, u.ContactNumber, 
                    p.PatientName, p.NRIC, p.PatientGender, p.PatientHeight, 
                    p.PatientWeight, p.PatientDOB, p.PatientConditions
             FROM Users u
             LEFT JOIN Patients p ON u.UserID = p.UserID
             WHERE u.IsStaff = 0
-        """)
+        """
+        
+        filters = []
+        params = []
+
+        # Add filters dynamically if they exist
+        if user_id:
+            filters.append("u.UserID = %s")
+            params.append(user_id)
+        if username:
+            filters.append("u.Username LIKE %s")
+            params.append(f"%{username}%")
+        if email:
+            filters.append("u.Email LIKE %s")
+            params.append(f"%{email}%")
+        if address:
+            filters.append("u.Address LIKE %s")
+            params.append(f"%{address}%")
+        if contact_number:
+            filters.append("u.ContactNumber LIKE %s")
+            params.append(f"%{contact_number}%")
+        if name:
+            filters.append("p.PatientName LIKE %s")
+            params.append(f"%{name}%")
+        if nric:
+            filters.append("p.NRIC LIKE %s")
+            params.append(f"%{nric}%")
+        if gender:
+            filters.append("p.PatientGender = %s")
+            params.append(gender)
+        if height:
+            filters.append("p.PatientHeight = %s")
+            params.append(height)
+        if weight:
+            filters.append("p.PatientWeight = %s")
+            params.append(weight)
+        if dob:
+            filters.append("p.PatientDOB = %s")
+            params.append(dob)
+
+        # If there are filters, append them to the query
+        if filters:
+            query += " AND " + " AND ".join(filters)
+
+        # Execute the query with parameters
+        cursor.execute(query, params)
         patients = cursor.fetchall()
 
         cursor.close()
         connection.close()
+
+        # Render the template with the filtered patient data
         return render_template('staff_dashboard.html', patients=patients)
     else:
         flash('Please login or create a new account to access our services.')
         return redirect(url_for('login'))
+
 
 
 # Patient Dashboard route
@@ -538,6 +599,13 @@ def patient_dashboard():
 
 @app.route('/medications')
 def medications():
+
+        # Check if the user is logged in and is staff
+    if not session.get('is_staff') == 1:
+        # Show a flash message and redirect to the patient dashboard
+        flash("You do not have permission to access the Medication List.")
+        return redirect(url_for('patient_dashboard'))  # Redirect to patient_dashboard.html
+
     if 'is_staff' in session:  # You can modify the condition based on access control
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
@@ -562,104 +630,6 @@ def medications():
         flash('Please login to view the list of medications.')
         return redirect(url_for('login'))
 
-from datetime import datetime, timedelta
-
-@app.route('/manage_appointment')
-def manage_appointment():
-    if 'is_staff' in session and session['is_staff'] == 1:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-
-        # Calculate the date range for the next 7 days
-        start_date = datetime.now()
-        end_date = start_date + timedelta(days=7)
-
-        # Fetch appointments in the next 7 days
-        cursor.execute("""
-            SELECT * FROM Appointments 
-            WHERE ApptDate BETWEEN %s AND %s
-        """, (start_date.date(), end_date.date()))
-        appointments = cursor.fetchall()
-
-        cursor.close()
-        connection.close()
-        return render_template('manage_appointment.html', appointments=appointments)
-    else:
-        flash('Please login or create a new account to access our services.')
-
-@app.route('/view_patient/<int:patient_id>/<int:appt_id>', methods=['GET', 'POST'])
-def view_patient(patient_id, appt_id):
-    connection = get_db_connection()
-    cursor = connection.cursor()
-
-    if request.method == 'POST':
-        # Check if we are saving a prescription
-        if 'medication' in request.form:
-            medication_name = request.form['medication']
-            duration = request.form['duration']
-            notes = request.form['notes']
-
-            # Fetch the MedID based on medication name
-            cursor.execute("SELECT MedID FROM Medications WHERE name = %s", (medication_name,))
-            med = cursor.fetchone()
-
-            if med:
-                med_id = med[0]
-                # Insert into Prescriptions table
-                cursor.execute("""
-                    INSERT INTO Prescriptions (PatientID, ApptID, MedID, Dosage, Date, Notes) 
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """, (patient_id, appt_id, med_id, duration, datetime.now(), notes))
-                connection.commit()
-                flash('Prescription added successfully!', 'success')
-            else:
-                flash('Medication not found!', 'danger')
-
-        else:
-            # Save the diagnosis and notes (existing functionality)
-            diagnosis = request.form['diagnosis']
-            notes = request.form['notes']
-            date = datetime.now()
-
-            cursor.execute("""
-                INSERT INTO PatientHistory (PatientID, ApptID, diagnosis, notes, date) 
-                VALUES (%s, %s, %s, %s, %s)
-            """, (patient_id, appt_id, diagnosis, notes, date))
-
-            connection.commit()
-            flash('Patient history updated successfully!', 'success')
-
-    # Fetch patient information
-    cursor.execute("SELECT * FROM Patients WHERE PatientID = %s", (patient_id,))
-    patient_info = cursor.fetchone()
-
-    # Make sure to consume any outstanding results
-    cursor.fetchall()  # This will clear any unread results, if they exist
-
-    # Fetch patient's past diagnoses
-    cursor.execute("SELECT * FROM PatientHistory WHERE PatientID = %s", (patient_id,))
-    patient_history = cursor.fetchall()
-
-    cursor.close()
-    connection.close()
-    return render_template('view_patient.html', patient=patient_info, history=patient_history, appt_id=appt_id)
-
-@app.route('/fetch_medications')
-def fetch_medications():
-    query = request.args.get('query', '')
-    connection = get_db_connection()
-    cursor = connection.cursor()
-
-    # Fetch medications that match the user's input
-    cursor.execute("SELECT * FROM Medications WHERE LOWER(name) LIKE %s", (f'%{query}%',))
-    medications = cursor.fetchall()
-    
-    cursor.close()
-    connection.close()
-    
-    # Prepare response data
-    medication_list = [{'name': med[1]} for med in medications] # Assuming index 1 corresponds to medication name
-    return jsonify(medication_list)
 
 if __name__ == '__main__':
     app.run(debug=True)

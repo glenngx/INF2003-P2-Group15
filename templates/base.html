@@ -30,15 +30,29 @@
         <!-- Navbar links -->
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                {% if request.path != '/login' and request.path != '/register' %}
                 <li class="nav-item">
-                    <a class="nav-link {% if request.path == url_for('staff_dashboard') or request.path == url_for('patient_dashboard') or request.path == '/login' %}active{% endif %}" href="{% if session['is_staff'] == 1 %}{{ url_for('staff_dashboard') }}{% else %}{{ url_for('patient_dashboard') }}{% endif %}">
+                    <a class="nav-link {% if request.path == url_for('staff_dashboard') or request.path == url_for('patient_dashboard') %}active{% endif %}" href="{% if session['is_staff'] == 1 %}{{ url_for('staff_dashboard') }}{% else %}{{ url_for('patient_dashboard') }}{% endif %}">
                         Home
                     </a>                    
                 </li>
-                {% if not session['username'] %}
+                {% endif %}
+                
+                <!-- Medication List for staff members -->
+                {% if session['is_staff'] == 1 %}
                 <li class="nav-item">
-                    <a class="nav-link {% if request.path == '/register' %}active{% endif %}" href="/register">Register</a>
+                    <a class="nav-link {% if request.path == url_for('medications') %}active{% endif %}" href="{{ url_for('medications') }}">
+                        Medication List
+                    </a>
                 </li>
+                {% endif %}
+
+                {% if not session['username'] %}
+                <!-- Uncomment the following block if 'Register' option is required -->
+                <!-- <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/register' %}active{% endif %}" href="/register">Register</a>
+                </li> -->
                 {% else %}
                 <li class="nav-item">
                     <a class="nav-link {% if request.path == '/update_account' %}active{% endif %}" href="/update_account">Update Account</a>
@@ -47,7 +61,9 @@
                     <a class="nav-link {% if request.path == '/logout' %}active{% endif %}" href="/logout">Logout</a>
                 </li>
                 {% endif %}
+
             </ul>
+            
             <!-- Show username if logged in -->
             {% if session['username'] %}
             <span class="navbar-text">Logged in as: {{ session['username'] }}</span>
