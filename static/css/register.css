@@ -1,0 +1,122 @@
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+    background-color: transparent !important;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    height: 100%;
+    /* margin-top: -3.5rem; */
+}
+
+.column {
+    height: 100vh;
+    margin-top: -3.5rem;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.rightcol {
+    display: block;
+    flex:67%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    transition: .5s ease-in;
+}
+
+.leftcol {
+    display: block;
+    flex: 33%;
+    background-image: url(../images/pexels-anntarazevich-7904469.jpg);
+    background-size: cover;
+    background-repeat: none;
+}
+
+h1 {
+    font-size: 2rem;
+    margin: 32px 0;
+    text-align: center;
+}
+
+form {
+    /* width: 320px; */
+    padding: 8px 32px;
+}
+
+form .row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+form .col-md-6{width: 320px;}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+select {
+    height: 40px;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+#contact{margin-bottom: 0 !important;}
+#contact_number{margin-top: 4px;}
+
+.input-group-text{height: 40px;margin-top: 4px;}
+
+.col-nric-name{display: flex;flex-direction: row;justify-content: space-between;}
+#col-nric{margin-right: 4px;padding: 0;}
+#col-name{margin-left: 8px;padding: 0;}
+
+#login {
+    display: inline-block;
+    width: auto; /* Set the width to auto so it doesn't expand */
+    float: right; /* Align to the right */
+    margin-top: 20px; /* Add some margin for spacing */
+}
+
+
+
+/* button.btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2rem;
+} */
+
+/* button.btn:hover {
+    background-color: #0056b3;
+}
+
+a.btn-outline-primary {
+    text-align: center;
+    margin-top: 10px;
+    text-decoration: none;
+    font-size: 1.2rem;
+    color: #007bff;
+    border: 1px solid #007bff;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+a.btn-outline-primary:hover {
+    background-color: #007bff;
+    color: white;
+} */
