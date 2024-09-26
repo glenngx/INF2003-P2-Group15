@@ -59,8 +59,32 @@ body {
     margin: 1.5rem 0 !important;
 }
   
-.button-login{text-align: left;}
-.button-register{text-align: right;}
+.button-login {
+    text-align: left;
+}
+
+.button-register {
+    text-align: right;
+}
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 40px;
+}
+
+.password-wrapper i {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #999;
+}
 
 @media only screen and (max-width: 640px) {
     h1 {
