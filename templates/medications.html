@@ -37,16 +37,18 @@
                     <th>Name</th>
                     <th>Form</th>
                     <th>Dosage</th>
+                    <th>Quantity</th>
                     <th>Indication</th>
                 </tr>
             </thead>
             <tbody>
                 {% for medication in medications %}
                 <tr>
-                    <td>{{ medication['med_id'] }}</td>
+                    <td>{{ medication['MedID'] }}</td>
                     <td>{{ medication['name'] }}</td>
                     <td>{{ medication['form'] }}</td>
                     <td>{{ medication['dosage'] }}</td>
+                    <td>{{ medication['quantity'] }}</td>
                     <td>{{ medication['indication'] }}</td>
                 </tr>
                 {% endfor %}
