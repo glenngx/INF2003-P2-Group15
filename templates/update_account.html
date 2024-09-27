@@ -79,10 +79,8 @@
             flashMessage.style.display = 'none';
         }
     }, 3000);  // 3000 milliseconds = 3 seconds
-</script>
 
-<!-- JavaScript to show the message when the read-only fields are clicked -->
-<script>
+    // JavaScript to show the message when the read-only fields are clicked
     function showMessage(id) {
         const messageElement = document.getElementById(id);
         messageElement.classList.remove('d-none');  // Show the message
@@ -90,5 +88,5 @@
             messageElement.classList.add('d-none');  // Hide the message after 3 seconds
         }, 3000);
     }
-    </script>
+</script>
 {% endblock %}
