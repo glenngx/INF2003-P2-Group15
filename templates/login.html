@@ -2,6 +2,9 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+<!-- Include Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
 {% endblock %}
 
 {% block content %}
@@ -23,52 +26,57 @@
         <form method="POST" action="/login" novalidate>
             <div class="mb-3">
                 <label for="username" class="form-label">Username</label>
-                <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username..." required>
+                <input type="text" class="form-control" id="username" name="username" placeholder="Enter Username" required>
                 <div class="invalid-feedback">
                     Please enter your username.
                 </div>
             </div>
             <div class="mb-3">
                 <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password..." required>
+                <div class="password-wrapper">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter Password" required>
+                    <i class="fas fa-eye" id="togglePassword" style="cursor: pointer;"></i>
+                </div>
                 <div class="invalid-feedback">
                     Please enter your password.
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Login</button>
+            <div class="mb-3 form-button">
+                <button type="submit" class="btn btn-primary button-login">Login</button>
+            </div>
+            <p class="register-hyperlink">Don't have an account? <a href="/register">Sign Up</a></p>
         </form>
     </div>
     <div class="column rightcol"></div>
 </div>
 
 <!-- Display Flash Messages for Invalid Credentials -->
-{% with messages = get_flashed_messages() %}
+<!-- {% with messages = get_flashed_messages() %}
     {% if messages %}
         <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
             {{ messages[0] }}
         </div>
     {% endif %}
-{% endwith %}
+{% endwith %} -->
 
 <script>
-// JavaScript to enable Bootstrap validation styling
-(function() {
-    'use strict';
+    // JavaScript to enable Bootstrap validation styling
+    (function() {
+        'use strict';
 
-    var forms = document.querySelectorAll('form');
+        var forms = document.querySelectorAll('form');
 
-    Array.prototype.slice.call(forms).forEach(function(form) {
-        form.addEventListener('submit', function(event) {
-            if (!form.checkValidity()) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            form.classList.add('was-validated');
-        }, false);
-    });
-})();
-</script>
-<script>
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+
     // Hide the flash message after 3 seconds
     setTimeout(function() {
         const flashMessage = document.getElementById('flash-message');
@@ -76,5 +84,20 @@
             flashMessage.style.display = 'none';
         }
     }, 3000);  // 3000 milliseconds = 3 seconds
+
+    // Password Toggle
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#password');
+
+    togglePassword.addEventListener('click', function (e) {
+        // Toggle the type attribute
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        
+        // Toggle the icon
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+    });
+
 </script>
 {% endblock %}

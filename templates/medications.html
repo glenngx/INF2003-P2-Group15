@@ -2,6 +2,41 @@
 
 {% block styles %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/medications.css') }}">
+    <style>
+        /* Style for modal */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.4); 
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -29,6 +64,9 @@
         {% endif %}
         {% endwith %}
 
+        <!-- Manage Meds Button -->
+        <button id="manageMedsBtn" class="btn btn-secondary">Manage Meds</button>
+
         <!-- Medications Table -->
         <table class="table table-striped">
             <thead>
@@ -37,16 +75,18 @@
                     <th>Name</th>
                     <th>Form</th>
                     <th>Dosage</th>
+                    <th>Quantity</th>
                     <th>Indication</th>
                 </tr>
             </thead>
             <tbody>
                 {% for medication in medications %}
                 <tr>
-                    <td>{{ medication['med_id'] }}</td>
+                    <td>{{ medication['MedID'] }}</td>
                     <td>{{ medication['name'] }}</td>
                     <td>{{ medication['form'] }}</td>
                     <td>{{ medication['dosage'] }}</td>
+                    <td>{{ medication['quantity'] }}</td>
                     <td>{{ medication['indication'] }}</td>
                 </tr>
                 {% endfor %}
@@ -60,7 +100,65 @@
     <div class="column rightcol"></div>
 </div>
 
+<!-- Modal for Managing Medication -->
+<div id="manageMedsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Manage Medications</h2>
+        <form method="POST" action="/update_medication_quantity">
+            <div class="form-group">
+                <label for="medicationSelect">Select Medication:</label>
+                <select id="medicationSelect" name="medication_id" class="form-control" onchange="updateCurrentQuantity()">
+                    {% for medication in medications %}
+                    <option value="{{ medication['MedID'] }}" data-quantity="{{ medication['quantity'] }}">{{ medication['name'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="currentQuantity">Current Quantity:</label>
+                <input type="number" id="currentQuantity" class="form-control" value="{{ medications[0]['quantity'] }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="quantityChange">Adjust Quantity:</label>
+                <input type="number" id="quantityChange" name="quantity_change" class="form-control" placeholder="Enter quantity to increase/decrease">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Quantity</button>
+        </form>
+    </div>
+</div>
+
 <script>
+    // Get modal element
+    var modal = document.getElementById("manageMedsModal");
+    var btn = document.getElementById("manageMedsBtn");
+    var span = document.getElementsByClassName("close")[0];
+
+    // When the user clicks the button, open the modal
+    btn.onclick = function() {
+        modal.style.display = "block";
+        updateCurrentQuantity();  // Update quantity on modal open
+    }
+
+    // When the user clicks on (x), close the modal
+    span.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Function to update the current quantity based on selected medication
+    function updateCurrentQuantity() {
+        var selectElement = document.getElementById("medicationSelect");
+        var selectedOption = selectElement.options[selectElement.selectedIndex];
+        var currentQuantity = selectedOption.getAttribute("data-quantity");
+        document.getElementById("currentQuantity").value = currentQuantity;
+    }
+
     // Hide the flash message after 3 seconds
     setTimeout(function() {
         const flashMessage = document.getElementById('flash-message');

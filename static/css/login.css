@@ -4,7 +4,11 @@ body {
 }
 
 .navbar {
-    background-color: var(--color-white) !important;
+    background-color: transparent !important;
+}
+
+.container-fluid{
+    margin-top: 0;
 }
 
 .container {
@@ -47,6 +51,41 @@ body {
 
 .form-control {
     width: 320px;
+}
+
+.form-button {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    padding-top: 24px;
+}
+  
+.button-login {
+    width: 100%;
+}
+
+.register-hyperlink {
+    width: 100%;
+    text-align: center;
+}
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 40px;
+}
+
+.password-wrapper i {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #999;
 }
 
 @media only screen and (max-width: 640px) {

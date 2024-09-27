@@ -1,0 +1,146 @@
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    font-size: 2rem;
+    margin: 0 0 32px 0;
+    text-align: center;
+}
+
+
+.navbar {
+    background-color: transparent !important;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.column {
+    height: 100vh;
+    margin-top: -3.5rem;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.rightcol {
+    display: block;
+    flex:67%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    transition: .5s ease-in;
+}
+
+.leftcol {
+    display: block;
+    flex: 33%;
+    background-image: url(../images/pexels-alex-green-5699432.jpg);
+    background-size: cover;
+    background-repeat: none;
+    background-position: 89% 50%;
+}
+
+form {
+    padding: 8px 32px;
+}
+
+form .row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+form .col-md-6 {
+    width: 320px;
+}
+
+input[type="text"], input[type="email"], input[type="password"], input[type="date"], select {
+    height: 40px;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+#password, .mb-password {
+    margin-bottom: 0 !important;
+}
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 40px;
+}
+
+.password-wrapper i {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #999;
+}
+
+#label-username {
+    margin-top: 1px;
+}
+
+#contact {
+    margin-bottom: 0 !important;
+}
+
+#contact_number {
+    margin-top: 5px;
+    margin-bottom: 0 !important;
+}
+
+.input-group-text {
+    height: 40px;
+    margin-top: 5px;
+}
+
+.col-nric-name {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+#col-nric {
+    margin-right: 4px;
+    padding: 0;
+}
+
+#col-name {
+    margin-left: 8px;
+    padding: 0;
+}
+
+#login {
+    display:inline-flex;
+    width: auto;
+    float: right;
+    margin-top: 24px;
+}
+
+#register {
+    margin: 24px 0 16px 0;
+    width: 100%;
+}
+
+.login-hyperlink {
+    width: 100%;
+    text-align: center;
+}
