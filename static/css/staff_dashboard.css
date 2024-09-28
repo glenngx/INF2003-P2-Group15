@@ -99,7 +99,7 @@ th {
 .rightcol {
     width: 200px;
     position: fixed;
-    top: 77px;
+    top: 4.8rem;
     right: 56px;
     height: 100%;
     padding-left: 8px;
@@ -110,10 +110,12 @@ th {
 }
 
 .leftcol {
-    display: block;
-    width: calc(100% - 200px);
-    overflow-x: auto;
     display: flex;
+    width: calc(100% - 200px);
+    max-height: 82vh;
+    overflow-x: auto;
+    overflow-y: auto;
+    flex-direction: column;
     justify-content: flex-start;
     align-items: flex-start; 
 }
@@ -124,7 +126,7 @@ th {
     font-size: 14px;
 }
 
-.content-header{display: flex;z-index: -2;width: fit-content;}
+.content-header{display: flex;flex-direction: column;z-index: -2;width: fit-content;}
 
 .content-header h1{margin-bottom: 0 !important;}
 
@@ -149,12 +151,12 @@ th {
     margin: 0; 
     box-sizing: border-box;
     height: 40px;
-    }
+}
 
 @media (min-width: 1024px) {
     #filter-form{width: 100%;}
-
 }
+
 @media only screen and (max-height: 640px) {
     .table-container {
         max-height: 70vh;

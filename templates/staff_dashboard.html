@@ -10,21 +10,20 @@
 <div class="container-content">
     <div class="content-header">
         <h1>Staff Dashboard</h1>
+        <!-- Display Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
     </div>
 
     <div class="row">
         <div class="column leftcol">
-            <!-- Display Flash Messages -->
-            {% with messages = get_flashed_messages(with_categories=True) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-
             <!-- Filter Form -->
             <form id="filter-form" method="GET" action="{{ url_for('staff_dashboard') }}" onkeypress="return event.keyCode != 13;">
                 <div class="table-responsive">
