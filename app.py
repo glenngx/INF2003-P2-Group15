@@ -44,7 +44,7 @@ def index():
             return redirect(url_for('staff_dashboard'))
         else:
             return redirect(url_for('patient_dashboard'))
-    return redirect(url_for('login'))
+    return redirect(url_for('auth.login'))
 
 # Register the authentication blueprint
 app.register_blueprint(auth_bp)
