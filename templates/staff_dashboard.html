@@ -7,29 +7,30 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <style>
-        /* Adjust filter icon and input styles to be inline */
         .filter-header {
             display: inline-flex;
             align-items: center;
-            gap: 5px; /* Space between text and icon */
+            gap: 5px;
         }
     
         .filter-container {
             display: none;
             position: absolute;
-            top: -25px;  /* Move the filter container above the icon */
+            top: 100%;
             left: 0;
-            z-index: 999;  /* High z-index to ensure it's on top */
+            z-index: 9999;
             background-color: white;
-            padding: 5px;
+            padding: 10px;
             box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
             border: 1px solid #ddd;
-            width: 160px;  /* Increase the width of the filter box */
+            width: 200px;
+            max-height: 150px;
+            overflow-y: auto; 
         }
     
         .filter-icon {
             cursor: pointer;
-            font-size: 0.9em; /* Adjust icon size */
+            font-size: 0.9em; 
         }
     
         .filter-input {
@@ -40,18 +41,15 @@
             position: relative;
         }
     
-        /* Ensure only one filter input is shown at a time */
         .filter-container.active {
             display: block;
         }
     
-        /* Fix clipping issue in case of overflow */
         .table-container {
             position: relative;
             overflow: visible;
         }
 
-        /* Style the Clear Filters button */
         .clear-filters {
             margin-top: 10px;
         }
@@ -77,7 +75,7 @@
     top: 70px;
     right: 0;
     height: 100%;
-    border-left: 1px solid var(--color-primary);
+    border-left: 1px solid rgba(74, 144, 226, 0.3);
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -105,7 +103,7 @@
     table-layout: auto;
 }
 
-.content-header{display: flex;}
+.content-header{display: flex;z-index: -2;width: fit-content;}
 
 .content-header h1{margin-bottom: 0 !important;}
 
@@ -358,33 +356,33 @@
         }
     }, 3000);  // 3000 milliseconds = 3 seconds
 
-    // // Function to toggle the visibility of filter inputs
-    // function toggleFilter(filterId) {
-    //     const filterDiv = document.getElementById(filterId);
-    //     const allFilters = document.querySelectorAll('.filter-container');
+    // Function to toggle the visibility of filter inputs
+    function toggleFilter(filterId) {
+        const filterDiv = document.getElementById(filterId);
+        const allFilters = document.querySelectorAll('.filter-container');
 
-    //     // Hide all filters first
-    //     allFilters.forEach(filter => {
-    //         if (filter !== filterDiv) {
-    //             filter.classList.remove('active');
-    //         }
-    //     });
+        // Hide all filters first
+        allFilters.forEach(filter => {
+            if (filter !== filterDiv) {
+                filter.classList.remove('active');
+            }
+        });
 
-    //     // Toggle the clicked filter
-    //     filterDiv.classList.toggle('active');
-    // }
+        // Toggle the clicked filter
+        filterDiv.classList.toggle('active');
+    }
 
-    // // Function to hide the filters when clicking outside of them
-    // document.addEventListener('click', function(event) {
-    //     const isClickInside = event.target.closest('.filter-header') || event.target.closest('.filter-container');
+    // Function to hide the filters when clicking outside of them
+    document.addEventListener('click', function(event) {
+        const isClickInside = event.target.closest('.filter-header') || event.target.closest('.filter-container');
 
-    //     if (!isClickInside) {
-    //         const allFilters = document.querySelectorAll('.filter-container');
-    //         allFilters.forEach(filter => {
-    //             filter.classList.remove('active');
-    //         });
-    //     }
-    // });
+        if (!isClickInside) {
+            const allFilters = document.querySelectorAll('.filter-container');
+            allFilters.forEach(filter => {
+                filter.classList.remove('active');
+            });
+        }
+    });
 
     // Submit the filter form automatically when the input is changed
     function submitFilter() {
