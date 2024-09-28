@@ -200,6 +200,10 @@ def edit_patient(patient_id):
         # Validate address for Singapore postal code
         if not is_valid_sg_address(address):
             errors['address'] = 'Invalid address. Please include a valid 6-digit postal code.'
+            
+        # Fetch the existing value of is_staff from the database
+        cursor.execute("SELECT IsStaff FROM Users WHERE UserID = %s", (patient_id,))
+        existing_is_staff = cursor.fetchone()['IsStaff']
 
         # Check for duplicates in the database
         cursor.execute("SELECT * FROM Users WHERE (Email = %s OR ContactNumber = %s OR Username = %s) AND UserID != %s",
@@ -230,19 +234,27 @@ def edit_patient(patient_id):
                     WHERE UserID = %s
                 """, (patient_name, nric, patient_gender, patient_height, patient_weight, patient_dob, patient_conditions, patient_id))
                 
-                if password:  # Only update password if it's provided
+                # Fetch the existing hashed password from the database
+                cursor.execute("SELECT Password FROM Users WHERE UserID = %s", (patient_id,))
+                existing_hashed_password = cursor.fetchone()['Password']
+
+                # Only re-hash and update the password if a new one is provided
+                if password.strip():  # If a new password is entered
                     hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
                     cursor.execute("""
                         UPDATE Users
                         SET Password = %s
                         WHERE UserID = %s
                     """, (hashed_password, patient_id))
+                else:
+                    # No need to update the password if the field is left blank
+                    hashed_password = existing_hashed_password
 
                 cursor.execute("""
                     UPDATE Users
-                    SET Username = %s, Email = %s, ContactNumber = %s, Address = %s
+                    SET Username = %s, Email = %s, ContactNumber = %s, Address = %s, IsStaff = %s
                     WHERE UserID = %s
-                """, (username, email, contact_number, address, patient_id))
+                """, (username, email, contact_number, address, existing_is_staff, patient_id))
 
                 connection.commit()
                 flash('Patient details updated successfully!', 'success')
@@ -408,11 +420,9 @@ def update_account():
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
-        password = request.form['password']
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        password = request.form['password']  # Get the password input
         address = request.form.get('address')
         contact_number = request.form.get('contact_number')
-        is_staff = 1 if 'is_staff' in request.form else 0
         
         # Validate address and phone number
         if address and not is_valid_sg_address(address):
@@ -422,6 +432,10 @@ def update_account():
         if contact_number and not is_valid_sg_phone(contact_number):
             flash('Invalid Singapore phone number. Please provide a valid 8-digit number starting with 6, 8, or 9.')
             return redirect(url_for('update_account'))
+        
+        # Fetch the existing value of is_staff from the database
+        cursor.execute("SELECT IsStaff FROM Users WHERE UserID = %s", (session['user_id'],))
+        existing_is_staff = cursor.fetchone()[0]
 
         # Check if email already exists for another user
         cursor.execute("SELECT * FROM Users WHERE Email = %s AND UserID != %s", (email, session['user_id']))
@@ -431,12 +445,23 @@ def update_account():
             flash('Email is already in use by another account.')
             return redirect(url_for('update_account'))
 
+        # Fetch the existing hashed password from the database
+        cursor.execute("SELECT Password FROM Users WHERE UserID = %s", (session['user_id'],))
+        existing_hashed_password = cursor.fetchone()[0]
+
+        # Only re-hash and update the password if a new one is provided
+        if password.strip():  # Check if a new password is entered
+            hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        else:
+            # If no new password is provided, keep the old hashed password
+            hashed_password = existing_hashed_password
+
         # Update user details in the database
         cursor.execute("""
             UPDATE Users
             SET Username = %s, Email = %s, Password = %s, Address = %s, ContactNumber = %s, IsStaff = %s
             WHERE UserID = %s
-        """, (username, email, hashed_password, address, contact_number, is_staff, session['user_id']))
+        """, (username, email, hashed_password, address, contact_number, existing_is_staff, session['user_id']))
         connection.commit()
 
         # Update session data with new username
@@ -456,6 +481,7 @@ def update_account():
     connection.close()
 
     return render_template('update_account.html', user=user)
+
 
 
 # Route to delete the user's account
