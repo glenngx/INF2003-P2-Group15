@@ -25,8 +25,8 @@
                 <p><strong>Contact Number:</strong> {{ user.ContactNumber or 'N/A' }}</p>
             </div>
             <div class="card-footer">
-                <a href="{{ url_for('update_account') }}" class="btn btn-warning">Update Account</a>
-                <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+                <a href="{{ url_for('auth.update_account') }}" class="btn btn-warning">Update Account</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
             </div>
         </div>
 
