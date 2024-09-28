@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Patient Information</h1>
+
+{% if patient %}
+    <h2>{{ patient[2] }} </h2> 
+    <h3>Appointment ID: {{ appt_id }}</h3>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="diagnosis">Diagnosis:</label>
+            <textarea name="diagnosis" id="diagnosis" class="form-control w-50" rows="5" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="notes">Notes:</label>
+            <textarea name="notes" id="notes" class="form-control w-50" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+
+    <h3>Past Diagnoses</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Diagnosis</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in history %}
+            <tr>
+                <td>{{ record[5] }}</td> <!-- index 5 corresponds to date -->
+                <td>{{ record[3] }}</td> <!-- index 3 corresponds to diagnosis -->
+                <td>{{ record[4] }}</td> <!-- index 2 corresponds to notes -->
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Prescribe Medication</h3>
+    <form id="prescription_form" method="POST">
+        <div class="mb-3">
+            <label for="medication">Medication:</label>
+            <input type="text" name="medication" id="medication" onkeyup="fetchMedications()" required class="form-control w-50" rows="5">
+            <ul id="medication_list" class="dropdown-list"></ul>
+        </div>
+        <div class="mb-3">
+            <label for="duration">Dosage:</label>
+            <input type="text" name="duration" id="duration" required class="form-control w-50" rows="5">
+        </div>
+        <div class="mb-3">
+            <label for="notes">Medications Instructions:</label>
+            <textarea name="notes" id="notes" class="form-control w-50" rows="5"></textarea>
+        </div>
+        <input type="hidden" name="appt_id" value="{{ appt_id }}">
+        <input type="hidden" name="patient_id" value="{{ patient[0] }}"><!-- Assuming index 0 corresponds to PatientID -->
+        <button type="submit" class="btn btn-primary">Prescribe</button>
+    </form>
+    
+    <script>
+        async function fetchMedications() {
+            const input = document.getElementById('medication').value;
+
+            // Fetching the medication list based on input
+            const response = await fetch(`/fetch_medications?query=${input}`);
+            const medications = await response.json();
+
+            // Clear the dropdown list
+            const medicationList = document.getElementById('medication_list');
+            medicationList.innerHTML = '';
+
+            // Populate the dropdown list
+            medications.forEach(med => {
+                const li = document.createElement('li');
+                li.textContent = med.name; // Change to name, which is the appropriate field for display
+                li.onclick = function () {
+                    document.getElementById('medication').value = med.name; // Setting input value to medication name
+                    medicationList.innerHTML = ''; // Clear the suggestion list
+                };
+                medicationList.appendChild(li);
+            });
+        }
+    </script>
+    
+    <style>
+        .dropdown-list {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            list-style-type: none;
+        }
+    
+        .dropdown-list li {
+            padding: 8px;
+            cursor: pointer;
+        }
+    
+        .dropdown-list li:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+{% else %}
+    <p>Patient not found.</p>
+{% endif %}
+{% endblock %}

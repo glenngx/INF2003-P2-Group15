@@ -737,6 +737,120 @@ def advanced_search():
 
     return jsonify(results)
 
+from datetime import datetime, timedelta
+
+@app.route('/manage_appointment')
+def manage_appointment():
+    if 'is_staff' in session and session['is_staff'] == 1:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        # Calculate the date range for the next 7 days
+        start_date = datetime.now()
+        end_date = start_date + timedelta(days=7)
+
+        # Fetch appointments in the next 7 days
+        cursor.execute("""
+            SELECT * FROM Appointments 
+            WHERE ApptDate BETWEEN %s AND %s
+        """, (start_date.date(), end_date.date()))
+        appointments = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+        return render_template('manage_appointment.html', appointments=appointments)
+    else:
+        flash('Please login or create a new account to access our services.')
+
+@app.route('/view_patient/<int:patient_id>/<int:appt_id>', methods=['GET', 'POST'])
+def view_patient(patient_id, appt_id):
+    connection = get_db_connection()
+    cursor = connection.cursor(buffered=True)
+
+    if request.method == 'POST':
+        # Check if we are saving a prescription
+        if 'medication' in request.form:
+            medication_name = request.form['medication']
+            duration = request.form['duration']
+            notes = request.form['notes']
+
+            # Fetch the MedID based on medication name
+            cursor.execute("SELECT MedID, quantity FROM Medications WHERE name = %s", (medication_name,))
+            med = cursor.fetchone()
+
+            if med:
+                med_id = med[0]
+                current_quantity = med[1]
+                requested_dosage = int(duration)  # Assuming 'duration' is the amount to be taken
+                print(current_quantity, type(current_quantity))
+                print(requested_dosage, type(requested_dosage))
+                # Check if enough medication is available
+                if current_quantity >= requested_dosage:
+                    # Insert into Prescriptions table
+                    cursor.execute("""
+                        INSERT INTO Prescriptions (PatientID, ApptID, MedID, Dosage, Date, Notes) 
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (patient_id, appt_id, med_id, requested_dosage, datetime.now(), notes))
+                    
+                    # Deduct the quantity
+                    new_quantity = current_quantity - requested_dosage
+                    cursor.execute("UPDATE Medications SET quantity = %s WHERE MedID = %s", (new_quantity, med_id))
+
+                    # Insert log into Inventory logs
+                    cursor.execute("""
+                        INSERT INTO InventoryLogs (MedID, change_type, quantity_changed, date) 
+                        VALUES (%s, 'subtract', %s, %s)
+                    """, (med_id, requested_dosage, datetime.now()))
+
+                    connection.commit()
+                    flash('Prescription added successfully!', 'success')
+                else:
+                    flash('Not enough medication in stock!', 'danger')
+            else:
+                flash('Medication not found!', 'danger')
+
+        else:
+            # Save the diagnosis and notes (existing functionality)
+            diagnosis = request.form['diagnosis']
+            notes = request.form['notes']
+            date = datetime.now()
+
+            cursor.execute("""
+                INSERT INTO PatientHistory (PatientID, ApptID, diagnosis, notes, date) 
+                VALUES (%s, %s, %s, %s, %s)
+            """, (patient_id, appt_id, diagnosis, notes, date))
+
+            connection.commit()
+            flash('Patient history updated successfully!', 'success')
+
+    # Fetch patient information
+    cursor.execute("SELECT * FROM Patients WHERE PatientID = %s", (patient_id,))
+    patient_info = cursor.fetchone()
+
+    # Fetch patient's past diagnoses
+    cursor.execute("SELECT * FROM PatientHistory WHERE PatientID = %s", (patient_id,))
+    patient_history = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+    return render_template('view_patient.html', patient=patient_info, history=patient_history, appt_id=appt_id)
+
+@app.route('/fetch_medications')
+def fetch_medications():
+    query = request.args.get('query', '')
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    # Fetch medications that match the user's input
+    cursor.execute("SELECT * FROM Medications WHERE LOWER(name) LIKE %s", (f'%{query}%',))
+    medications = cursor.fetchall()
+    
+    cursor.close()
+    connection.close()
+    
+    # Prepare response data
+    medication_list = [{'name': med[1]} for med in medications] # Assuming index 1 corresponds to medication name
+    return jsonify(medication_list)
 
 if __name__ == '__main__':
     app.run(debug=True)
