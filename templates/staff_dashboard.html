@@ -1,139 +1,9 @@
 {% extends 'base.html' %}
 
 {% block styles %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/staff_dashboard.css') }}">
     <!-- Include Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
-    <style>
-        .filter-header {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-    
-        .filter-container {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            z-index: 9999;
-            background-color: white;
-            padding: 10px;
-            box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
-            border: 1px solid #ddd;
-            width: 200px;
-            max-height: 150px;
-            overflow-y: auto; 
-        }
-    
-        .filter-icon {
-            cursor: pointer;
-            font-size: 0.9em; 
-        }
-    
-        .filter-input {
-            width: 100%;
-        }
-    
-        th {
-            position: relative;
-        }
-    
-        .filter-container.active {
-            display: block;
-        }
-    
-        .table-container {
-            position: relative;
-            overflow: visible;
-        }
-
-        .clear-filters {
-            margin-top: 10px;
-        }
-
-        .row {
-    display: flex;
-    width: 100%;
-    height: fit-content;
-    padding: 0;
-    margin: 0;
-}
-
-.column {
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.rightcol {
-    width: 250px;
-    position: fixed;
-    top: 70px;
-    right: 0;
-    height: 100%;
-    border-left: 1px solid rgba(74, 144, 226, 0.3);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    z-index: 1;
-    overflow-y: auto;
-}
-
-.leftcol {
-    display: block;
-    width: calc(100% - 250px);
-    overflow-x: auto;
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start; 
-}
-
-.table-responsive {
-    width: 100%; 
-    overflow-x: auto;
-    font-size: 14px;
-}
-
-.table {
-    width: 100%; 
-    table-layout: auto;
-}
-
-.content-header{display: flex;z-index: -2;width: fit-content;}
-
-.content-header h1{margin-bottom: 0 !important;}
-
-#advancedSearchForm{display: flex;width: 100%;height: 100%;}
-
-#advancedSearchForm p {
-    text-align: left;
-    margin-bottom: 8px;
-}
-
-#advancedSearchForm .row {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-}
-
-#advancedSearchForm .form-control {
-    width: 100%;
-    padding: 8px;
-    margin: 0; 
-    box-sizing: border-box;
-    height: 40px;
-}
-
-@media (min-width: 1024px) {
-    #filter-form{width: 100%;}
-    
-}
-    </style>
 {% endblock %}
 
 {% block content %}
@@ -142,19 +12,19 @@
         <h1>Staff Dashboard</h1>
     </div>
 
-    <!-- Display Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=True) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
     <div class="row">
         <div class="column leftcol">
+            <!-- Display Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             <!-- Filter Form -->
             <form id="filter-form" method="GET" action="{{ url_for('staff_dashboard') }}" onkeypress="return event.keyCode != 13;">
                 <div class="table-responsive">

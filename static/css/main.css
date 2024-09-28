@@ -26,9 +26,13 @@ h1{
 
 .btn-primary{background-color:var(--color-primary);}
 
-.navbar{
-    padding-right: 100px;
-    padding-left: 100px;
+.bg-light{
+    background-color: var(--color-secondary) !important;
+}
+
+nav .container-fluid {
+    padding-right: 56px;
+    padding-left: 56px;
 }
 
 .navbar-brand{margin-right: 24px !important;}
