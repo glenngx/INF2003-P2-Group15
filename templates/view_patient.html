@@ -4,16 +4,16 @@
 <h1>Patient Information</h1>
 
 {% if patient %}
-    <h2>{{ patient[2] }} </h2> <!-- You can modify indices based on your database schema -->
+    <h2>{{ patient[2] }} </h2> 
     <h3>Appointment ID: {{ appt_id }}</h3>
     <form method="POST">
-        <div>
+        <div class="mb-3">
             <label for="diagnosis">Diagnosis:</label>
-            <input type="text" name="diagnosis" id="diagnosis" required>
+            <textarea name="diagnosis" id="diagnosis" class="form-control w-50" rows="5" required></textarea>
         </div>
-        <div>
+        <div class="mb-3">
             <label for="notes">Notes:</label>
-            <textarea name="notes" id="notes" required></textarea>
+            <textarea name="notes" id="notes" class="form-control w-50" rows="5" required></textarea>
         </div>
         <button type="submit" class="btn btn-primary">Save</button>
     </form>
@@ -30,9 +30,9 @@
         <tbody>
             {% for record in history %}
             <tr>
-                <td>{{ record[5] }}</td> <!-- Assuming index 4 corresponds to date -->
-                <td>{{ record[3] }}</td> <!-- Assuming index 3 corresponds to diagnosis -->
-                <td>{{ record[4] }}</td> <!-- Assuming index 2 corresponds to notes -->
+                <td>{{ record[5] }}</td> <!-- index 5 corresponds to date -->
+                <td>{{ record[3] }}</td> <!-- index 3 corresponds to diagnosis -->
+                <td>{{ record[4] }}</td> <!-- index 2 corresponds to notes -->
             </tr>
             {% endfor %}
         </tbody>
@@ -40,18 +40,18 @@
 
     <h3>Prescribe Medication</h3>
     <form id="prescription_form" method="POST">
-        <div>
+        <div class="mb-3">
             <label for="medication">Medication:</label>
-            <input type="text" name="medication" id="medication" onkeyup="fetchMedications()" required>
+            <input type="text" name="medication" id="medication" onkeyup="fetchMedications()" required class="form-control w-50" rows="5">
             <ul id="medication_list" class="dropdown-list"></ul>
         </div>
-        <div>
+        <div class="mb-3">
             <label for="duration">Dosage:</label>
-            <input type="text" name="duration" id="duration" required>
+            <input type="text" name="duration" id="duration" required class="form-control w-50" rows="5">
         </div>
-        <div>
-            <label for="notes">Notes:</label>
-            <textarea name="notes" id="notes"></textarea>
+        <div class="mb-3">
+            <label for="notes">Medications Instructions:</label>
+            <textarea name="notes" id="notes" class="form-control w-50" rows="5"></textarea>
         </div>
         <input type="hidden" name="appt_id" value="{{ appt_id }}">
         <input type="hidden" name="patient_id" value="{{ patient[0] }}"><!-- Assuming index 0 corresponds to PatientID -->
@@ -73,9 +73,9 @@
             // Populate the dropdown list
             medications.forEach(med => {
                 const li = document.createElement('li');
-                li.textContent = med.name; // Change to the appropriate field for display
+                li.textContent = med.name; // Change to name, which is the appropriate field for display
                 li.onclick = function () {
-                    document.getElementById('medication').value = med.name; // Set input value to medication name
+                    document.getElementById('medication').value = med.name; // Setting input value to medication name
                     medicationList.innerHTML = ''; // Clear the suggestion list
                 };
                 medicationList.appendChild(li);

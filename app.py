@@ -635,7 +635,7 @@ def manage_appointment():
 @app.route('/view_patient/<int:patient_id>/<int:appt_id>', methods=['GET', 'POST'])
 def view_patient(patient_id, appt_id):
     connection = get_db_connection()
-    cursor = connection.cursor()
+    cursor = connection.cursor(buffered=True)
 
     if request.method == 'POST':
         # Check if we are saving a prescription
@@ -645,18 +645,37 @@ def view_patient(patient_id, appt_id):
             notes = request.form['notes']
 
             # Fetch the MedID based on medication name
-            cursor.execute("SELECT MedID FROM Medications WHERE name = %s", (medication_name,))
+            cursor.execute("SELECT MedID, quantity FROM Medications WHERE name = %s", (medication_name,))
             med = cursor.fetchone()
 
             if med:
                 med_id = med[0]
-                # Insert into Prescriptions table
-                cursor.execute("""
-                    INSERT INTO Prescriptions (PatientID, ApptID, MedID, Dosage, Date, Notes) 
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """, (patient_id, appt_id, med_id, duration, datetime.now(), notes))
-                connection.commit()
-                flash('Prescription added successfully!', 'success')
+                current_quantity = med[1]
+                requested_dosage = int(duration)  # Assuming 'duration' is the amount to be taken
+                print(current_quantity, type(current_quantity))
+                print(requested_dosage, type(requested_dosage))
+                # Check if enough medication is available
+                if current_quantity >= requested_dosage:
+                    # Insert into Prescriptions table
+                    cursor.execute("""
+                        INSERT INTO Prescriptions (PatientID, ApptID, MedID, Dosage, Date, Notes) 
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (patient_id, appt_id, med_id, requested_dosage, datetime.now(), notes))
+                    
+                    # Deduct the quantity
+                    new_quantity = current_quantity - requested_dosage
+                    cursor.execute("UPDATE Medications SET quantity = %s WHERE MedID = %s", (new_quantity, med_id))
+
+                    # Insert log into Inventory logs
+                    cursor.execute("""
+                        INSERT INTO InventoryLogs (MedID, change_type, quantity_changed, date) 
+                        VALUES (%s, 'subtract', %s, %s)
+                    """, (med_id, requested_dosage, datetime.now()))
+
+                    connection.commit()
+                    flash('Prescription added successfully!', 'success')
+                else:
+                    flash('Not enough medication in stock!', 'danger')
             else:
                 flash('Medication not found!', 'danger')
 
@@ -677,9 +696,6 @@ def view_patient(patient_id, appt_id):
     # Fetch patient information
     cursor.execute("SELECT * FROM Patients WHERE PatientID = %s", (patient_id,))
     patient_info = cursor.fetchone()
-
-    # Make sure to consume any outstanding results
-    cursor.fetchall()  # This will clear any unread results, if they exist
 
     # Fetch patient's past diagnoses
     cursor.execute("SELECT * FROM PatientHistory WHERE PatientID = %s", (patient_id,))
