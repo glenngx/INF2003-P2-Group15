@@ -25,7 +25,7 @@
 
     <div class="container mt-5">
         <h2>Book an Appointment</h2>
-        <form method="POST" action="{{ url_for('book_appointment') }}">
+        <form method="POST" action="{{ url_for('patient.book_appointment') }}">
             <div class="form-group">
                 <label for="appt_date">Appointment Date</label>
                 <input type="date" id="appt_date" name="appt_date" class="form-control"
@@ -46,7 +46,7 @@
                 <textarea class="form-control" id="appt_reason" name="appt_reason" rows="3" required></textarea>
             </div>
             <button type="submit" class="btn btn-primary">Book Appointment</button>
-            <a href="{{ url_for('patient_dashboard') }}" class="btn btn-secondary">Cancel</a>
+            <a href="{{ url_for('patient.patient_dashboard') }}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>
 

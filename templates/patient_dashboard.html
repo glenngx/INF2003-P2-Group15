@@ -25,12 +25,12 @@
                 <p><strong>Contact Number:</strong> {{ user.ContactNumber or 'N/A' }}</p>
             </div>
             <div class="card-footer">
-                <a href="{{ url_for('update_account') }}" class="btn btn-warning">Update Account</a>
-                <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+                <a href="{{ url_for('patient.update_account') }}" class="btn btn-warning">Update Account</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
             </div>
         </div>
 
-        <a href="{{ url_for('book_appointment') }}" class="btn btn-primary mb-4">Book an Appointment</a>
+        <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary mb-4">Book an Appointment</a>
 
         <h3 class="mt-4">Your Appointments</h3>
         {% if appointments %}
