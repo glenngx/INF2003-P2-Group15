@@ -1,59 +1,28 @@
 body {
     display: flex;
     flex-direction: column;
-    background-color: var(--color-white);
 }
 
 h1 {
     margin: 0 0 32px 0;
-    text-align: center;
-}
-
-.navbar {
-    background-color: transparent !important;
+    width: auto !important;
 }
 
 .row {
+    width: 100vw;
     display: flex;
-    justify-content: space-between;
-}
-
-.column {
-    height: 100vh;
-    margin-top: -3.5rem;
-    padding: 0;
-    display: flex;
-    justify-content: center;
+    flex-direction: row;
     align-items: center;
-}
-
-.rightcol {
-    display: block;
-    flex:67%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    transition: .5s ease-in;
-}
-
-.leftcol {
-    display: block;
-    flex: 33%;
-    background-image: url(../images/pexels-alex-green-5699432.jpg);
-    background-size: cover;
-    background-repeat: none;
-    background-position: 100% 50%;
+    justify-content:center;
+    margin-bottom: 40px;
 }
 
 form {
     padding: 8px 32px;
-}
-
-form .row {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 form .col-md-6 {
@@ -127,19 +96,4 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
     padding: 0;
 }
 
-#login {
-    display:inline-flex;
-    width: auto;
-    float: right;
-    margin-top: 24px;
-}
-
-#register {
-    margin: 24px 0 16px 0;
-    width: 100%;
-}
-
-.login-hyperlink {
-    width: 100%;
-    text-align: center;
-}
+.form-button{width: fit-content;}
