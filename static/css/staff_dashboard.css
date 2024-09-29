@@ -1,5 +1,3 @@
-body{background-color: var(--color-secondary);}
-
 h1 {
     margin-top: 8px;
 }
@@ -31,11 +29,13 @@ h1 {
 }
 
 td {
-    vertical-align: middle;   
+    vertical-align: middle;
+    padding: 6px !important;
 }
 
 th {
     position: relative;
+    padding: 6px !important;
 }
 
 .filter-header {
@@ -100,7 +100,7 @@ th {
     width: 200px;
     position: fixed;
     top: 4.8rem;
-    right: 56px;
+    right: 52px;
     height: 100%;
     padding-left: 8px;
     display: flex;
@@ -111,7 +111,7 @@ th {
 
 .leftcol {
     display: flex;
-    width: calc(100% - 200px);
+    width: calc(100% - 192px);
     max-height: 82vh;
     overflow-x: auto;
     overflow-y: auto;
@@ -126,11 +126,21 @@ th {
     font-size: 14px;
 }
 
-.content-header{display: flex;flex-direction: column;z-index: -2;width: fit-content;}
+.content-header {
+    display: flex;
+    flex-direction: column;
+    z-index: -2;
+    width: fit-content;}
 
-.content-header h1{margin-bottom: 0 !important;}
+.content-header h1 {
+    margin-bottom: 0 !important;
+}
 
-#advancedSearchForm{display: flex;width: 100%;height: 100%;}
+#advancedSearchForm {
+    display: flex;
+    width: 96%;
+    height: 100%;
+}
 
 #advancedSearchForm p {
     text-align: left;
@@ -161,5 +171,4 @@ th {
     .table-container {
         max-height: 70vh;
     }
-    
 }
