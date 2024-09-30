@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Edit Appointment</h1>
+
+<!-- Display Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=True) %}
+{% if messages %}
+{% for category, message in messages %}
+<div id="flash-message" class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<form method="POST">
+    <div class="form-group">
+        <label for="date">Appointment Date:</label>
+        <input type="date" id="date" name="date" class="form-control" value="{{ appointment[2] }}" required>
+    </div>
+    <div class="form-group">
+        <label for="time">Appointment Time:</label>
+        <select class="form-control" id="time" name="time" required>
+            {% for hour in range(8, 17) %} <!-- 8am to 5pm -->
+            {% for minute in ['00', '30'] %} <!-- restrict to 30 min intervals -->
+            <option value="{{ '%02d' % hour }}:{{ minute }}">{{ '%02d' % hour }}:{{ minute }}</option>
+            {% endfor %}
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="status">Appointment Status:</label>
+        <select id="status" name="status" class="form-control" required>
+            <option value="Scheduled" {% if appointment[4]=='Scheduled' %}selected{% endif %}>Scheduled</option>
+            <option value="Completed" {% if appointment[4]=='Completed' %}selected{% endif %}>Completed</option>
+            <option value="Cancelled" {% if appointment[4]=='Cancelled' %}selected{% endif %}>Cancelled</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="reason">Reason:</label>
+        <input type="text" id="reason" name="reason" class="form-control" value="{{ appointment[5] }}"
+            style="margin-bottom: 20px;" required>
+    </div>
+    <button type="submit" class="btn btn-primary" style="margin-bottom: 15px;">Save Changes</button>
+</form>
+
+<form action="/delete_appointment/{{ appointment[0] }}" method="post"
+    onsubmit="return confirm('Are you sure you want to delete the appointment? This action cannot be undone.');">
+    <button type="submit" class="btn btn-danger">Delete Appointment</button>
+</form>
+
+<script>
+
+    // Hide the flash message after 3 seconds
+    setTimeout(function () {
+        const flashMessage = document.getElementById('flash-message');
+        if (flashMessage) {
+            flashMessage.style.display = 'none';
+        }
+    }, 3000);  // 3000 milliseconds = 3 seconds
+</script>
+{% endblock %}
+
+<style>
+    .dropdown-list {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        list-style-type: none;
+    }
+
+    .dropdown-list li {
+        padding: 8px;
+        cursor: pointer;
+    }
+
+    .dropdown-list li:hover {
+        background-color: #f0f0f0;
+    }
+</style>

@@ -486,3 +486,135 @@ def advanced_search():
     connection.close()
 
     return jsonify(results)
+
+@staff_bp.route('/edit_appointment/<int:appt_id>', methods=['GET', 'POST'])
+def edit_appointment(appt_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    if request.method == 'POST':
+        # If the form is submitted, update the appointment details.
+        date = request.form['date']
+        time = request.form['time']
+        status = request.form['status']
+        reason = request.form['reason']
+
+        cursor.execute("""
+            UPDATE Appointments 
+            SET ApptDate = %s, ApptTime = %s, ApptStatus = %s, ApptReason = %s 
+            WHERE ApptID = %s
+        """, (date, time, status, reason, appt_id))
+
+        connection.commit()
+        flash('Appointment updated successfully!', 'success')
+        return redirect(url_for('staff.manage_appointment'))  # Redirect to appointments list after updating
+
+    # If it's a GET request, fetch the current appointment details.
+    cursor.execute("SELECT * FROM Appointments WHERE ApptID = %s", (appt_id,))
+    appointment = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+    
+    return render_template('edit_appointment.html', appointment=appointment)
+
+@staff_bp.route('/staff_book_appointment', methods=['GET', 'POST'])
+def staff_book_appointment():
+    if 'user_id' not in session:
+        flash('Please log in as staff to book an appointment.')
+        return redirect(url_for('auth.login'))
+
+    # Get the current date and the date one week from now
+    today = datetime.now().date()
+    one_week_later = today + timedelta(days=7)
+
+    if request.method == 'POST':
+        # Collect form data
+        nric = request.form.get('patient_nric')
+        appt_date = request.form.get('appt_date')
+        appt_time = request.form.get('appt_time')
+        appt_reason = request.form.get('appt_reason')
+
+        # Basic validation
+        if not nric or not appt_date or not appt_time or not appt_reason:
+            flash('All fields are required.')
+            return redirect(url_for('staff.staff_book_appointment'))
+
+        try:
+            appt_date_obj = datetime.strptime(appt_date, '%Y-%m-%d').date()
+            appt_time_obj = datetime.strptime(appt_time, '%H:%M').time()
+            if appt_time_obj.minute not in [0, 30]:
+                flash('Appointments must be booked at 30-minute intervals.')
+                return redirect(url_for('staff.staff_book_appointment'))
+        except ValueError:
+            flash('Invalid date or time format.')
+            return redirect(url_for('staff.staff_book_appointment'))
+
+        if appt_date_obj < datetime.today().date():
+            flash('Appointment date must be in the future.')
+            return redirect(url_for('staff.staff_book_appointment'))
+
+        if appt_date_obj < today or appt_date_obj > one_week_later:
+            flash('Appointments can only be booked within the next 7 days.')
+            return redirect(url_for('staff.staff_book_appointment'))
+
+        # Connect to the database
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        try:
+            # Check if the patient exists
+            cursor.execute("SELECT PatientID FROM Patients WHERE nric = %s", (nric,))
+            patient = cursor.fetchone()
+
+            if not patient:
+                flash('Patient NRIC not found. Please contact support.')
+                return redirect(url_for('staff.staff_book_appointment'))
+
+            patient_id = patient[0]  # Get the PatientID from the result
+            
+            # Check if the appointment slot is available
+            cursor.execute("""
+                SELECT COUNT(*) FROM Appointments 
+                WHERE ApptDate = %s AND ApptTime = %s
+            """, (appt_date_obj, appt_time_obj))
+            existing_appointments = cursor.fetchone()[0]
+
+            if existing_appointments > 0:
+                flash('This appointment slot is already taken. Please choose another time.')
+                return redirect(url_for('staff.staff_book_appointment'))
+
+            # Insert the appointment into the Appointments table
+            cursor.execute("""
+                INSERT INTO Appointments (PatientID, ApptDate, ApptTime, ApptStatus, ApptReason)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (patient_id, appt_date_obj, appt_time_obj, 'Pending', appt_reason))
+            connection.commit()
+
+            flash('Appointment booked successfully!', 'success')
+            return redirect(url_for('staff.staff_dashboard'))
+
+        except mysql.connector.Error as err:
+            print(f"Error: {err}")
+            flash('An error occurred while booking the appointment. Please try again.', 'danger')
+            return redirect(url_for('staff.staff_book_appointment'))
+
+        finally:
+            cursor.close()
+            connection.close()
+
+    return render_template('staff_book_appointment.html', min_date=today, max_date=one_week_later)
+
+@staff_bp.route('/delete_appointment/<int:appt_id>', methods=['POST'])
+def delete_appointment(appt_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("DELETE FROM Appointments WHERE ApptID = %s", (appt_id,))
+    connection.commit()
+    
+    flash('Appointment deleted successfully!', 'success')
+    cursor.close()
+    connection.close()
+    
+    return redirect(url_for('staff.manage_appointment'))  # Redirect to appointments list
