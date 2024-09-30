@@ -7,6 +7,7 @@ from utils import is_valid_nric, is_valid_sg_address, is_valid_sg_phone
 import mysql.connector
 from werkzeug.security import generate_password_hash
 from datetime import datetime, timedelta
+import logging
 
 # Staff Dashboard route
 @staff_bp.route('/staff_dashboard', methods=['GET'])
@@ -84,14 +85,22 @@ def staff_dashboard():
             filters.append("p.PatientWeight = %s")
             params.append(weight)
         if dob:
-            filters.append("p.PatientDOB = %s")
-            params.append(dob)
+            try:
+                formatted_dob = datetime.strptime(dob, '%Y-%m-%d').date()
+                filters.append("p.PatientDOB = %s")
+                params.append(formatted_dob)
+            except ValueError:
+                logging.warning(f"Invalid date format for DOB: {dob}")
         if diagnosis:
             filters.append("ph.diagnosis LIKE %s")
             params.append(f"%{diagnosis}%")
         if diagnosis_date:
-            filters.append("ph.diagnosis_date = %s")
-            params.append(diagnosis_date)
+            try:
+                formatted_date = datetime.strptime(diagnosis_date, '%Y-%m-%d').date()
+                filters.append("DATE(ph.diagnosis_date) = %s")
+                params.append(formatted_date)
+            except ValueError:
+                logging.warning(f"Invalid date format for diagnosis_date: {diagnosis_date}")
 
         # If there are filters, append them to the query
         if filters:
@@ -432,43 +441,62 @@ def advanced_search():
         'PatientHeight': request.form.get('height'),
         'PatientWeight': request.form.get('weight'),
         'PatientDOB': request.form.get('dob'),
-        'PatientConditions': request.form.get('conditions')
+        'diagnosis': request.form.get('diagnosis'),
+        'diagnosis_date': request.form.get('diagnosis_date')
     }
 
     query = """
     SELECT u.UserID, u.Username, u.Email, u.Address, u.ContactNumber, 
            p.PatientName, p.NRIC, p.PatientGender, p.PatientHeight, 
-           p.PatientWeight, p.PatientDOB, p.PatientConditions
+           p.PatientWeight, p.PatientDOB, ph.diagnosis, ph.diagnosis_date
     FROM Users u
     LEFT JOIN Patients p ON u.UserID = p.UserID
+    LEFT JOIN (
+        SELECT ph1.PatientID, ph1.diagnosis, ph1.date AS diagnosis_date
+        FROM PatientHistory ph1
+        INNER JOIN (
+            SELECT PatientID, MAX(date) AS latest_date
+            FROM PatientHistory
+            GROUP BY PatientID
+        ) ph2 ON ph1.PatientID = ph2.PatientID AND ph1.date = ph2.latest_date
+    ) ph ON p.PatientID = ph.PatientID
     WHERE u.IsStaff = 0
     """
 
     conditions = []
     params = []
 
+    # Add filters dynamically if they exist
     for field, value in filters.items():
         if value:
-            if field in ['Username', 'Email', 'Address', 'ContactNumber', 'PatientName', 'NRIC', 'PatientConditions']:
+            if field in ['Username', 'Email', 'Address', 'ContactNumber', 'PatientName', 'NRIC',
+                         'diagnosis']:  # Adjusted field list
                 conditions.append(f"{field} LIKE %s")
                 params.append(f"%{value}%")
             elif field == 'PatientGender':
                 gender_map = {'Male': 'M', 'Female': 'F'}
-                conditions.append(f"{field} = %s")
+                conditions.append(f"p.PatientGender = %s")
                 params.append(gender_map.get(value, value))
             elif field in ['PatientHeight', 'PatientWeight']:
-                # Handle decimal values for height and weight
                 try:
                     float_value = float(value)
-                    conditions.append(f"ABS({field} - %s) < 0.01")
+                    conditions.append(f"ABS(p.{field} - %s) < 0.01")
                     params.append(float_value)
                 except ValueError:
-                    # If the value is not a valid float, ignore this filter
                     pass
             elif field == 'PatientDOB':
-                conditions.append(f"{field} = %s")
+                conditions.append(f"p.PatientDOB = %s")
                 params.append(value)
+            elif field == 'diagnosis_date':
+                try:
+                    formatted_date = datetime.strptime(value, '%Y-%m-%d').date()
+                    conditions.append(f"DATE(ph.diagnosis_date) = %s")
+                    params.append(formatted_date)
+                except ValueError:
+                    logging.warning(f"Invalid date format for diagnosis_date: {value}")
+                    continue
 
+    # Add conditions to the query
     if conditions:
         query += " AND " + " AND ".join(conditions)
 
@@ -479,9 +507,13 @@ def advanced_search():
     cursor = connection.cursor(dictionary=True)
     cursor.execute(query, params)
     results = cursor.fetchall()
-    for result in results:  # exclude time from DOB for advanced search
+
+    for result in results:  # Ensure that DOB is formatted correctly
         if result['PatientDOB']:
             result['PatientDOB'] = result['PatientDOB'].strftime('%Y-%m-%d')
+        if result['diagnosis_date']:  # Ensure diagnosis_date is formatted correctly
+            result['diagnosis_date'] = result['diagnosis_date'].strftime('%Y-%m-%d')
+
     cursor.close()
     connection.close()
 
