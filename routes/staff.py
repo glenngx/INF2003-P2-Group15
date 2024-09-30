@@ -27,14 +27,25 @@ def staff_dashboard():
         height = request.args.get('height', '')
         weight = request.args.get('weight', '')
         dob = request.args.get('dob', '')
+        diagnosis = request.args.get('diagnosis', '')  # New filter for diagnosis
+        diagnosis_date = request.args.get('diagnosis_date', '')  # New filter for diagnosis date
 
-        # Start building the SQL query
+        # Construct the query to fetch patient details
         query = """
             SELECT u.UserID, u.Username, u.Email, u.Address, u.ContactNumber, 
                    p.PatientName, p.NRIC, p.PatientGender, p.PatientHeight, 
-                   p.PatientWeight, p.PatientDOB, p.PatientConditions
+                   p.PatientWeight, p.PatientDOB, ph.diagnosis, ph.diagnosis_date
             FROM Users u
             LEFT JOIN Patients p ON u.UserID = p.UserID
+            LEFT JOIN (
+                SELECT ph1.PatientID, ph1.diagnosis, ph1.date as diagnosis_date
+                FROM PatientHistory ph1
+                INNER JOIN (
+                    SELECT PatientID, MAX(date) AS latest_date
+                    FROM PatientHistory
+                    GROUP BY PatientID
+                ) ph2 ON ph1.PatientID = ph2.PatientID AND ph1.date = ph2.latest_date
+            ) ph ON p.PatientID = ph.PatientID
             WHERE u.IsStaff = 0
         """
         
@@ -75,6 +86,12 @@ def staff_dashboard():
         if dob:
             filters.append("p.PatientDOB = %s")
             params.append(dob)
+        if diagnosis:
+            filters.append("ph.diagnosis LIKE %s")
+            params.append(f"%{diagnosis}%")
+        if diagnosis_date:
+            filters.append("ph.diagnosis_date = %s")
+            params.append(diagnosis_date)
 
         # If there are filters, append them to the query
         if filters:
@@ -93,9 +110,10 @@ def staff_dashboard():
         flash('Please login or create a new account to access our services.')
         return redirect(url_for('auth.login'))
     
-    # edit patient records
+# Edit patient records
 @staff_bp.route('/edit_patient/<int:patient_id>', methods=['GET', 'POST'])
 def edit_patient(patient_id):
+    # Check if user is logged in and is staff
     if 'is_staff' not in session or session['is_staff'] != 1:
         flash('You do not have access to this page.')
         return redirect(url_for('auth.login'))
@@ -105,18 +123,37 @@ def edit_patient(patient_id):
     errors = {}
 
     if request.method == 'POST':
+        
+        print(f"Full form data: {request.form}")
+        # Retrieve form data
         patient_name = request.form['patient_name']
         nric = request.form['nric']
         patient_gender = request.form['patient_gender']
         patient_height = request.form['patient_height']
         patient_weight = request.form['patient_weight']
         patient_dob = request.form['patient_dob']
-        patient_conditions = request.form['patient_conditions']
         email = request.form['email']
         username = request.form['username']
         contact_number = request.form['contact_number']
         address = request.form['address']
         password = request.form.get('password')
+
+        # Handle past diagnosis update or add
+        diagnosis_id = request.form.getlist('diagnosis_id')
+        print(f"Diagnosis IDs: {diagnosis_id}")
+        diagnosis_text = request.form.getlist('diagnosis_text')
+        diagnosis_date = request.form.getlist('diagnosis_date')
+        diagnosis_notes = request.form.getlist('diagnosis_notes')
+        appt_id = request.form.getlist('appt_id')  # Fetch the ApptID list
+        
+        # Fetch PatientID from Patients table
+        cursor.execute("SELECT PatientID FROM Patients WHERE UserID = %s", (patient_id,))
+        patient_data = cursor.fetchone()
+        if not patient_data:
+            flash('Patient not found.', 'danger')
+            return redirect(url_for('staff.staff_dashboard'))
+
+        actual_patient_id = patient_data['PatientID']  # Use PatientID instead of UserID
 
         # Validate NRIC format
         if not is_valid_nric(nric):
@@ -129,12 +166,11 @@ def edit_patient(patient_id):
         # Validate address for Singapore postal code
         if not is_valid_sg_address(address):
             errors['address'] = 'Invalid address. Please include a valid 6-digit postal code.'
-            
-        # Fetch the existing value of is_staff from the database
+
+        # Check for duplicates in the database
         cursor.execute("SELECT IsStaff FROM Users WHERE UserID = %s", (patient_id,))
         existing_is_staff = cursor.fetchone()['IsStaff']
 
-        # Check for duplicates in the database
         cursor.execute("SELECT * FROM Users WHERE (Email = %s OR ContactNumber = %s OR Username = %s) AND UserID != %s",
                        (email, contact_number, username, patient_id))
         existing_user = cursor.fetchone()
@@ -156,53 +192,81 @@ def edit_patient(patient_id):
         # If no errors, update the patient details in the database
         if not errors:
             try:
+                # Update Patients table
                 cursor.execute("""
                     UPDATE Patients
                     SET PatientName = %s, NRIC = %s, PatientGender = %s, PatientHeight = %s, 
-                        PatientWeight = %s, PatientDOB = %s, PatientConditions = %s
+                        PatientWeight = %s, PatientDOB = %s
                     WHERE UserID = %s
-                """, (patient_name, nric, patient_gender, patient_height, patient_weight, patient_dob, patient_conditions, patient_id))
-                
-                # Fetch the existing hashed password from the database
+                """, (patient_name, nric, patient_gender, patient_height, patient_weight, patient_dob, patient_id))
+
+                # Update password if provided
                 cursor.execute("SELECT Password FROM Users WHERE UserID = %s", (patient_id,))
                 existing_hashed_password = cursor.fetchone()['Password']
 
-                # Only re-hash and update the password if a new one is provided
-                if password.strip():  # If a new password is entered
+                if password and password.strip():  # If a new password is provided
                     hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
                     cursor.execute("""
                         UPDATE Users
                         SET Password = %s
                         WHERE UserID = %s
                     """, (hashed_password, patient_id))
-                else:
-                    # No need to update the password if the field is left blank
-                    hashed_password = existing_hashed_password
 
+                # Update Users table for other details
                 cursor.execute("""
                     UPDATE Users
                     SET Username = %s, Email = %s, ContactNumber = %s, Address = %s, IsStaff = %s
                     WHERE UserID = %s
                 """, (username, email, contact_number, address, existing_is_staff, patient_id))
 
+                # Handle diagnosis updates and inserts
+                for idx, diag_id in enumerate(diagnosis_id):
+                    
+                    # If diagnosis ID (history_id) exists, update the existing diagnosis
+                    if diag_id:
+                        cursor.execute("""
+                            UPDATE PatientHistory 
+                            SET diagnosis = %s, date = %s, notes = %s, ApptID = %s
+                            WHERE history_id = %s AND PatientID = %s
+                        """, (diagnosis_text[idx], diagnosis_date[idx], diagnosis_notes[idx], appt_id[idx], diag_id, actual_patient_id))
+
+                # Commit all changes to the database
                 connection.commit()
-                flash('Patient details updated successfully!', 'success')
+
+                flash('Patient details and diagnoses updated successfully!', 'success')
                 return redirect(url_for('staff.staff_dashboard'))
             except mysql.connector.Error as err:
+                connection.rollback()  # Rollback in case of any error
                 flash(f'An error occurred: {err}', 'danger')
 
-    # Fetch patient details
-    cursor.execute("SELECT * FROM Patients WHERE UserID = %s", (patient_id,))
+    # Fetch patient details including UserID and PatientID
+    cursor.execute("SELECT UserID, PatientID, PatientName, NRIC, PatientGender, PatientHeight, PatientWeight, PatientDOB FROM Patients WHERE UserID = %s", (patient_id,))
     patient = cursor.fetchone()
 
-    # Fetch user details (related to patient)
+    if not patient:
+        flash('Patient not found', 'danger')
+        return redirect(url_for('staff.staff_dashboard'))
+
+    # Fetch user details related to the patient
     cursor.execute("SELECT * FROM Users WHERE UserID = %s", (patient_id,))
     user = cursor.fetchone()
 
+    # Fetch past diagnoses using PatientID
+    cursor.execute("SELECT history_id, ApptID, diagnosis, date, notes FROM PatientHistory WHERE PatientID = %s ORDER BY date DESC", (patient['PatientID'],))
+    patient_diagnoses = cursor.fetchall()
+
+    # Format diagnosis dates to 'YYYY-MM-DD' for display
+    for diag in patient_diagnoses:
+        if diag['date']:
+            diag['date'] = diag['date'].strftime('%Y-%m-%d')
+
+    # Close cursor and connection
     cursor.close()
     connection.close()
 
-    return render_template('edit_patient.html', patient=patient, user=user, errors=errors)
+    return render_template('edit_patient.html', patient=patient, user=user, diagnoses=patient_diagnoses, errors=errors)
+
+
 
 
 # Delete patient records
@@ -259,6 +323,7 @@ def manage_appointment():
     else:
         flash('Please login or create a new account to access our services.')
 
+# View patient details
 @staff_bp.route('/view_patient/<int:patient_id>/<int:appt_id>', methods=['GET', 'POST'])
 def view_patient(patient_id, appt_id):
     connection = get_db_connection()
@@ -332,6 +397,7 @@ def view_patient(patient_id, appt_id):
     connection.close()
     return render_template('view_patient.html', patient=patient_info, history=patient_history, appt_id=appt_id)
 
+# Fetch medications
 @staff_bp.route('/fetch_medications')
 def fetch_medications():
     query = request.args.get('query', '')
