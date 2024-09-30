@@ -133,7 +133,24 @@
                                         <input type="date" name="dob" value="{{ request.args.get('dob', '') }}" class="form-control filter-input" onchange="submitFilter()">
                                     </div>
                                 </th>
-                                <th>Medical Conditions</th>
+                                <th>
+                                    <div class="filter-header">
+                                        Latest Diagnosis
+                                        <i class="fas fa-filter filter-icon" onclick="toggleFilter('filter-diagnosis')"></i>
+                                    </div>
+                                    <div id="filter-diagnosis" class="filter-container">
+                                        <input type="text" name="diagnosis" value="{{ request.args.get('diagnosis', '') }}" placeholder="Filter Diagnosis" class="form-control filter-input" oninput="submitFilter()">
+                                    </div>
+                                </th>
+                                <th>
+                                    <div class="filter-header">
+                                        Diagnosis Date
+                                        <i class="fas fa-filter filter-icon" onclick="toggleFilter('filter-diagnosis-date')"></i>
+                                    </div>
+                                    <div id="filter-diagnosis-date" class="filter-container">
+                                        <input type="date" name="diagnosis_date" value="{{ request.args.get('diagnosis_date', '') }}" class="form-control filter-input" onchange="submitFilter()">
+                                    </div>
+                                </th>
                                 <th>
                                     <!-- Filter Icon with Cross -->
                                     <div class="clear-filters" style="display: inline-flex; align-items: center;">
@@ -159,7 +176,8 @@
                                 <td>{{ patient[8] }}</td>  <!-- Height -->
                                 <td>{{ patient[9] }}</td>  <!-- Weight -->
                                 <td>{{ patient[10] }}</td> <!-- Date of Birth -->
-                                <td>{{ patient[11] }}</td> <!-- Medical Conditions -->
+                                <td>{{ patient[11] }}</td> <!-- Latest Diagnosis -->
+                                <td>{{ patient[12].strftime('%Y-%m-%d') if patient[12] else 'N/A' }}</td> <!-- Diagnosis Date -->
                                 <td>
                                     <a href="{{ url_for('staff.edit_patient', patient_id=patient[0]) }}" class="btn btn-primary">
                                         <i class="bi bi-pencil"></i>

@@ -85,12 +85,44 @@
     <input type="date" class="form-control" id="patient_dob" name="patient_dob" value="{{ patient.PatientDOB or '' }}" required>
   </div>
 
-  <div class="form-group">
-    <label for="patient_conditions">Medical Conditions:</label>
-    <textarea class="form-control" id="patient_conditions" name="patient_conditions" rows="3">{{ patient.PatientConditions or '' }}</textarea>
+  <h3 class="mb-4"  style="margin-top: 30px;">Past Diagnoses</h3>
+
+  <div id="diagnoses-section">
+    {% if diagnoses %}
+        <!-- Display diagnoses -->
+        <div class="diagnosis-wrapper">
+            {% for diagnosis in diagnoses %}
+            <div class="card mb-3 diagnosis-entry shadow-sm">
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="diagnosis_{{ loop.index }}" class="font-weight-bold">Diagnosis:</label>
+                            <input type="text" class="form-control" id="diagnosis_{{ loop.index }}" name="diagnosis_text" value="{{ diagnosis.diagnosis or '' }}" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="notes_{{ loop.index }}" class="font-weight-bold">Notes:</label>
+                            <textarea class="form-control" id="notes_{{ loop.index }}" name="diagnosis_notes" rows="2" placeholder="Additional notes...">{{ diagnosis.notes or '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="date_{{ loop.index }}" class="font-weight-bold">Diagnosis Date:</label>
+                            <input type="date" class="form-control" id="date_{{ loop.index }}" name="diagnosis_date" value="{{ diagnosis.date }}" required>
+                        </div>
+                        <input type="hidden" name="diagnosis_id" value="{{ diagnosis.history_id }}"> <!-- Hidden input for history_id -->
+                        <input type="hidden" name="appt_id" value="{{ diagnosis.ApptID }}">
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">No past diagnoses found for this patient.</p>
+    {% endif %}
   </div>
 
-  <button type="submit" class="btn btn-primary">Update Patient Details</button>
+  <button type="submit" class="btn btn-primary mt-4">Update Patient Details</button>
 </form>
 
 <script>
