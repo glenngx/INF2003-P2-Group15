@@ -221,13 +221,15 @@
                         <input type="number" step="0.01" class="form-control" name="height" placeholder="Height (cm)">
                     
                         <input type="number" step="0.01" class="form-control" name="weight" placeholder="Weight (kg)">
-                
-                        <input type="date" class="form-control" name="dob" placeholder="Date of Birth">
-                    
-                        <input type="text" class="form-control" name="conditions" placeholder="Medical Conditions">
+
+                        <input type="text" id="dob" class="form-control placeholder-style" placeholder="Date of Birth" name="dob">
+
+                        <input type="text" class="form-control" name="diagnosis" placeholder="Latest Diagnosis">
+
+                        <input type="text" id="diagnosis_date" class="form-control placeholder-style" placeholder="Diagnosis Date" name="diagnosis_date">
+                    </div>
 
                         <button type="submit" class="btn btn-primary">Search</button>
-                    </div>
                 </form>
             </div>
         </div>
@@ -311,7 +313,8 @@
                         <td>${patient.PatientHeight}</td>
                         <td>${patient.PatientWeight}</td>
                         <td>${patient.PatientDOB}</td>
-                        <td>${patient.PatientConditions}</td>
+                        <td>${patient.diagnosis}</td>
+                        <td>${patient.diagnosis_date ? patient.diagnosis_date.split('T')[0] : 'N/A'}</td>
                         <td>
                             <!-- Edit button -->
                             <a href="/edit_patient/${patient.UserID}" class="btn btn-primary">
@@ -333,6 +336,31 @@
         .catch(error => console.error('Error:', error));
     });
 });
+
+    // Function to switch to date input on focus
+    function handleFocus(event) {
+        event.target.type = 'date';
+        event.target.classList.remove('placeholder-style');  // Remove placeholder style
+    }
+
+    // Function to switch back to text input with placeholder on blur if the input is empty
+    function handleBlur(event) {
+        if (event.target.value === '') {
+            event.target.type = 'text';
+            event.target.placeholder = event.target.id === 'dob' ? 'Date of Birth' : 'Diagnosis Date';
+            event.target.classList.add('placeholder-style');  // Add placeholder style
+        }
+    }
+
+    // Attach event listeners for Date of Birth field
+    const dobInput = document.getElementById('dob');
+    dobInput.addEventListener('focus', handleFocus);
+    dobInput.addEventListener('blur', handleBlur);
+
+    // Attach event listeners for Diagnosis Date field
+    const diagnosisDateInput = document.getElementById('diagnosis_date');
+    diagnosisDateInput.addEventListener('focus', handleFocus);
+    diagnosisDateInput.addEventListener('blur', handleBlur);
 </script>
 
 {% endblock %}
