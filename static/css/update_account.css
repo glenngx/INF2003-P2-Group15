@@ -8,8 +8,14 @@ h1 {
     width: auto !important;
 }
 
+.container-fluid {
+    width: 100%;
+    padding-right: 45px;
+    padding-left: 56px;
+}
+
 .row {
-    width: 100vw;
+    width: 100%;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -18,15 +24,11 @@ h1 {
 }
 
 form {
-    padding: 8px 32px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-form .col-md-6 {
-    width: 320px;
+    justify-content: flex-start;
+    align-items: flex-start;
+    width: 100%;
 }
 
 input[type="text"], input[type="email"], input[type="password"], input[type="date"], select {
@@ -37,6 +39,10 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 1rem;
+}
+
+.col-md-6 {
+    padding-right: 0 !important;
 }
 
 #password, .mb-password {
@@ -83,17 +89,24 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
 .col-nric-name {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    width: 100%;
+}
+
+#col-nric, #col-name {
+    flex: 1; 
 }
 
 #col-nric {
-    margin-right: 4px;
-    padding: 0;
+    margin-right: 6px;
 }
 
 #col-name {
-    margin-left: 8px;
-    padding: 0;
+    margin-left: 6px;
 }
 
-.form-button{width: fit-content;}
+.form-buttons{width: 100%;padding-right:11px;}
+
+input[type="text"], input[type="email"], input[type="password"], input[type="date"], select {
+    width: 100%; /* Ensure input fields span the available width */
+    box-sizing: border-box; /* Ensure padding is included in width calculation */
+}
