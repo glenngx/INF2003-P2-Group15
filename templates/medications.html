@@ -30,7 +30,10 @@
         {% endwith %}
 
         <!-- Manage Meds Button -->
-        <button id="manageMedsBtn" class="btn btn-secondary">Manage Meds</button>
+        <button id="manageMedsBtn" class="btn btn-secondary">Manage Quantity</button>
+        
+        <!-- Add/Delete Meds Button -->
+        <button id="addDeleteMedsBtn" class="btn btn-secondary">Add/Delete Meds</button>
 
         <!-- Medications Table -->
         <table class="table table-striped">
@@ -81,7 +84,7 @@
             </div>
             <div class="form-group">
                 <label for="currentQuantity">Current Quantity:</label>
-                <input type="number" id="currentQuantity" class="form-control" value="{{ medications[0]['quantity'] }}" readonly>
+                <input type="number" id="currentQuantity" class="form-control" value="{% if medications|length > 0 %}{{ medications[0]['quantity'] }}{% else %}0{% endif %}" readonly>
             </div>
             <div class="form-group">
                 <label for="quantityChange">Adjust Quantity:</label>
@@ -92,27 +95,82 @@
     </div>
 </div>
 
-<script>
-    // Get modal element
-    var modal = document.getElementById("manageMedsModal");
-    var btn = document.getElementById("manageMedsBtn");
-    var span = document.getElementsByClassName("close")[0];
+<!-- Modal for Adding/Deleting Medication -->
+<div id="addDeleteMedsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Add or Delete Medications</h2>
+        <form method="POST" action="/manage_medication">
+            <div class="form-group">
+                <label for="medicationName">Medication Name:</label>
+                <input type="text" id="medicationName" name="name" class="form-control" placeholder="Enter medication name">
+            </div>
+            <div class="form-group">
+                <label for="medicationForm">Form:</label>
+                <input type="text" id="medicationForm" name="form" class="form-control" placeholder="Enter medication form">
+            </div>
+            <div class="form-group">
+                <label for="medicationDosage">Dosage:</label>
+                <input type="text" id="medicationDosage" name="dosage" class="form-control" placeholder="Enter medication dosage">
+            </div>
+            <div class="form-group">
+                <label for="medicationQuantity">Quantity:</label>
+                <input type="number" id="medicationQuantity" name="quantity" class="form-control" placeholder="Enter quantity">
+            </div>
+            <div class="form-group">
+                <label for="medicationIndication">Indication:</label>
+                <input type="text" id="medicationIndication" name="indication" class="form-control" placeholder="Enter indication">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Medication</button>
+        </form>
+        <form method="POST" action="/delete_medication">
+            <div class="form-group">
+                <label for="deleteMedication">Delete Medication:</label>
+                <select id="deleteMedication" name="medication_id" class="form-control">
+                    {% for medication in medications %}
+                    <option value="{{ medication['MedID'] }}">{{ medication['name'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-danger">Delete Medication</button>
+        </form>
+    </div>
+</div>
 
-    // When the user clicks the button, open the modal
-    btn.onclick = function() {
-        modal.style.display = "block";
+<script>
+    // Get modal elements
+    var manageMedsModal = document.getElementById("manageMedsModal");
+    var addDeleteMedsModal = document.getElementById("addDeleteMedsModal");
+    var manageMedsBtn = document.getElementById("manageMedsBtn");
+    var addDeleteMedsBtn = document.getElementById("addDeleteMedsBtn");
+    var spanManageMeds = manageMedsModal.getElementsByClassName("close")[0];
+    var spanAddDeleteMeds = addDeleteMedsModal.getElementsByClassName("close")[0];
+
+    // When the user clicks the button, open the respective modal
+    manageMedsBtn.onclick = function() {
+        manageMedsModal.style.display = "block";
         updateCurrentQuantity();  // Update quantity on modal open
     }
 
-    // When the user clicks on (x), close the modal
-    span.onclick = function() {
-        modal.style.display = "none";
+    addDeleteMedsBtn.onclick = function() {
+        addDeleteMedsModal.style.display = "block";
+    }
+
+    // When the user clicks on (x), close the modals
+    spanManageMeds.onclick = function() {
+        manageMedsModal.style.display = "none";
+    }
+
+    spanAddDeleteMeds.onclick = function() {
+        addDeleteMedsModal.style.display = "none";
     }
 
     // When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
+        if (event.target == manageMedsModal) {
+            manageMedsModal.style.display = "none";
+        } else if (event.target == addDeleteMedsModal) {
+            addDeleteMedsModal.style.display = "none";
         }
     }
 
