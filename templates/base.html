@@ -18,7 +18,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
         <!-- Branding / Logo -->
-        <a class="navbar-brand" href="{% if session['is_staff'] == 1 %}{{ url_for('staff_dashboard') }}{% else %}{{ url_for('patient_dashboard') }}{% endif %}">
+        <a class="navbar-brand" href="{% if session['is_staff'] == 1 %}{{ url_for('staff.staff_dashboard') }}{% else %}{{ url_for('patient.patient_dashboard') }}{% endif %}">
             ABC Clinic
         </a>
 
@@ -33,7 +33,7 @@
 
                 {% if request.path != '/login' and request.path != '/register' %}
                 <li class="nav-item">
-                    <a class="nav-link {% if request.path == url_for('staff_dashboard') or request.path == url_for('patient_dashboard') %}active{% endif %}" href="{% if session['is_staff'] == 1 %}{{ url_for('staff_dashboard') }}{% else %}{{ url_for('patient_dashboard') }}{% endif %}">
+                    <a class="nav-link {% if request.path == url_for('staff.staff_dashboard') or request.path == url_for('patient.patient_dashboard') %}active{% endif %}" href="{% if session['is_staff'] == 1 %}{{ url_for('staff.staff_dashboard') }}{% else %}{{ url_for('patient.patient_dashboard') }}{% endif %}">
                         Home
                     </a>                    
                 </li>
@@ -42,7 +42,7 @@
                 <!-- Medication List for staff members -->
                 {% if session['is_staff'] == 1 %}
                 <li class="nav-item">
-                    <a class="nav-link {% if request.path == url_for('medications') %}active{% endif %}" href="{{ url_for('medications') }}">
+                    <a class="nav-link {% if request.path == url_for('medication.medications') %}active{% endif %}" href="{{ url_for('medication.medications') }}">
                         Medication List
                     </a>
                 </li>

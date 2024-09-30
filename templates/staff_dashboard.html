@@ -25,7 +25,7 @@
     <div class="row">
         <div class="column leftcol">
             <!-- Filter Form -->
-            <form id="filter-form" method="GET" action="{{ url_for('staff_dashboard') }}" onkeypress="return event.keyCode != 13;">
+            <form id="filter-form" method="GET" action="{{ url_for('staff.staff_dashboard') }}" onkeypress="return event.keyCode != 13;">
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
@@ -137,7 +137,7 @@
                                 <th>
                                     <!-- Filter Icon with Cross -->
                                     <div class="clear-filters" style="display: inline-flex; align-items: center;">
-                                        <a href="{{ url_for('staff_dashboard') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center;">
+                                        <a href="{{ url_for('staff.staff_dashboard') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center;">
                                             <i class="fas fa-filter"></i>
                                             <i class="fas fa-times" style="margin-left: 5px;"></i>
                                         </a>
@@ -161,10 +161,10 @@
                                 <td>{{ patient[10] }}</td> <!-- Date of Birth -->
                                 <td>{{ patient[11] }}</td> <!-- Medical Conditions -->
                                 <td>
-                                    <a href="{{ url_for('edit_patient', patient_id=patient[0]) }}" class="btn btn-primary">
+                                    <a href="{{ url_for('staff.edit_patient', patient_id=patient[0]) }}" class="btn btn-primary">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form action="{{ url_for('delete_patient', patient_id=patient[0]) }}" method="POST" style="display:inline;">
+                                    <form action="{{ url_for('staff.delete_patient', patient_id=patient[0]) }}" method="POST" style="display:inline;">
                                         <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this patient?');">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -272,7 +272,7 @@
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(form);
-        fetch('{{ url_for("advanced_search") }}', {
+        fetch('{{ url_for("staff.advanced_search") }}', {
             method: 'POST',
             body: formData
         })
