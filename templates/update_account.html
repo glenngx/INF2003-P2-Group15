@@ -67,7 +67,7 @@
                 <!-- Row 3: Address -->
                 <div class="mb-3">
                     <label for="address" class="form-label">Address</label>
-                    <input type="text" class="form-control" id="address" name="address" value="{{ user[3] }}">
+                    <input type="text" class="form-control" id="address" name="address" value="{{ user[3] }}" pattern=".*\d{6}.*" title="Address must contain a 6-digit Singapore postal code." required>
                 </div>
                 
                 <!-- Row 4: Contact Number -->
@@ -75,19 +75,23 @@
                     <label for="contact_number" class="form-label">Contact Number</label>
                     <div class="input-group">
                         <span class="input-group-text">+65</span>
-                        <input type="text" class="form-control" id="contact_number" name="contact_number" value="{{ user[4] }}">
+                        <input type="text" class="form-control" id="contact_number" name="contact_number" value="{{ user[4] }}" pattern="^[689]\d{7}$" title="Phone number must start with 6, 8, or 9 and contain 8 digits." required>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="form-buttons d-flex justify-content-between">
+        <div class="form-buttons">
             <button type="submit" class="btn btn-primary">Update Account</button>
-            <form action="/delete_account" method="post" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
-                <button type="submit" class="btn btn-danger">Delete Account</button>
-            </form>
         </div>
     </form>
+
+    <!-- Separate Delete Account Form -->
+    <div class="form-buttons mt-3">
+    <form action="/delete_account" method="post" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');" class="form-inline">
+        <button type="submit" class="btn btn-danger">Delete Account</button>
+    </form>
+    </div>
 
 <script>
     // Hide the flash message after 3 seconds

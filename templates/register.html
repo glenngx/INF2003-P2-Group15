@@ -60,13 +60,13 @@
                     </div>
                     <div class="mb-3">
                         <label for="address" class="form-label">Address</label>
-                        <input type="text" class="form-control" id="address" name="address"  placeholder="Enter Address">
+                        <input type="text" class="form-control" id="address" name="address"  placeholder="Enter Address" pattern=".*\d{6}.*" title="Address must contain a 6-digit Singapore postal code." required>
                     </div>
                     <div id="contact" class="mb-3">
                         <label for="contact_number" class="form-label">Contact Number</label>
                         <div class="input-group">
                             <span class="input-group-text">+65</span>
-                            <input type="text" class="form-control" id="contact_number" name="contact_number" placeholder="Enter Contact Number">
+                            <input type="text" class="form-control" id="contact_number" name="contact_number" placeholder="Enter Contact Number" pattern="^[689]\d{7}$" title="Phone number must start with 6, 8, or 9 and contain 8 digits." required>
                         </div>
                     </div>
                 </div>

@@ -201,6 +201,10 @@ def edit_patient(patient_id):
         # If no errors, update the patient details in the database
         if not errors:
             try:
+                # Handle empty height and weight fields
+                patient_height = patient_height if patient_height.strip() else None
+                patient_weight = patient_weight if patient_weight.strip() else None
+                
                 # Update Patients table
                 cursor.execute("""
                     UPDATE Patients
