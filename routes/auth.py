@@ -140,9 +140,11 @@ def delete_account():
 
     connection = get_db_connection()
     cursor = connection.cursor()
-
-    # Delete the user's account from the database
-    # Delete the patient's records first, then the users table
+    
+    # Delete all records associated with the user
+    cursor.execute("DELETE FROM Prescriptions WHERE PatientID = (SELECT PatientID FROM Patients WHERE UserID = %s)", (session['user_id'],))
+    cursor.execute("DELETE FROM PatientHistory WHERE PatientID = (SELECT PatientID FROM Patients WHERE UserID = %s)", (session['user_id'],))
+    cursor.execute("DELETE FROM Appointments WHERE PatientID = (SELECT PatientID FROM Patients WHERE UserID = %s)", (session['user_id'],))
     cursor.execute("DELETE FROM Patients WHERE UserID = %s", (session['user_id'],))
     cursor.execute("DELETE FROM Users WHERE UserID = %s", (session['user_id'],))
     connection.commit()
