@@ -104,9 +104,21 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
     margin-left: 6px;
 }
 
-.form-buttons{width: 100%;padding-right:11px;}
+#deleteaccount {
+    position: relative;
+    height: 38px;
+    width: fit-content;
+    right: calc(-100% + 145px);
+    top: -54px;
+}
+
+@media (max-width: 768px) {
+    #password, .mb-password {
+        margin-bottom: 15px !important;
+    }
+}
 
 input[type="text"], input[type="email"], input[type="password"], input[type="date"], select {
-    width: 100%; /* Ensure input fields span the available width */
-    box-sizing: border-box; /* Ensure padding is included in width calculation */
+    width: 100%; 
+    box-sizing: border-box;
 }

@@ -42,7 +42,7 @@
                 </div>
             </div>
             <div class="mb-3 form-button">
-                <button type="submit" class="btn btn-primary button-login">Login</button>
+                <button type="submit" id="loginBtn" class="btn btn-primary button-login">Login</button>
             </div>
             <p class="register-hyperlink">Don't have an account? <a href="/register">Sign Up</a></p>
         </form>
@@ -88,6 +88,12 @@
         // Toggle the icon
         this.classList.toggle('fa-eye');
         this.classList.toggle('fa-eye-slash');
+    });
+
+    const loginBtn = document.querySelector('#loginBtn');
+    loginBtn.addEventListener('click', function() {
+        const toggleIcon = document.getElementById('togglePassword');
+        toggleIcon.style.display = 'none';
     });
 
 </script>

@@ -15,83 +15,83 @@
         {% endfor %}
     {% endif %}
 {% endwith %}
-    <h1>Update Particulars</h1>
-    <form action="/update_account" method="post">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="col-nric-name">
-                    <div id="col-nric">
-                        <label for="nric" class="form-label">NRIC</label>
-                        <p id="nric_msg" class="text-danger d-none">Please inform the staff to update personal particulars.</p>
-                        <input type="text" class="form-control" id="nric" value="{{ user[6] }}" readonly onclick="showMessage('nric_msg')">
-                    </div>
-                    <div id="col-name">
-                        <label for="patient_name" class="form-label">Name</label>
-                        <p id="patient_name_msg" class="text-danger d-none">Please inform the staff to update personal particulars.</p>
-                        <input type="text" class="form-control" id="patient_name" value="{{ user[5] }}" readonly onclick="showMessage('patient_name_msg')">
-                    </div>
+<h1>Update Particulars</h1>
+<form action="/update_account" method="post">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="col-nric-name">
+                <div id="col-nric">
+                    <label for="nric" class="form-label">NRIC</label>
+                    <p id="nric_msg" class="text-danger d-none">Please inform the staff to update personal particulars.</p>
+                    <input type="text" class="form-control" id="nric" value="{{ user[6] }}" readonly onclick="showMessage('nric_msg')">
                 </div>
-                
-                <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" value="{{ user[0] }}" required>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" value="{{ user[1] }}" required>
-                </div>
-                
-                <div class="mb-3 mb-password">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" placeholder="Leave blank if no change">
+                <div id="col-name">
+                    <label for="patient_name" class="form-label">Name</label>
+                    <p id="patient_name_msg" class="text-danger d-none">Please inform the staff to update personal particulars.</p>
+                    <input type="text" class="form-control" id="patient_name" value="{{ user[5] }}" readonly onclick="showMessage('patient_name_msg')">
                 </div>
             </div>
-
-            <!-- Second Column -->
-            <div class="col-md-6">
-                <!-- Row 1: Date of Birth -->
-                <div class="mb-3">
-                    <label for="dob" class="form-label">Date of Birth</label>
-                    <p id="dob_msg" class="text-danger d-none">Please inform the staff to update personal particulars.</p>
-                    <input type="date" class="form-control" id="dob" value="{{ user[8] }}" readonly onclick="showMessage('dob_msg')">
-                </div>
-                
-                <!-- Row 2: Gender -->
-                <div class="mb-3">
-                    <label for="gender" class="form-label">Gender</label>
-                    <p id="gender_msg" class="text-danger d-none">Please inform the staff to update personal particulars.</p>
-                    <input type="text" class="form-control" id="gender" value="{{ user[7] }}" readonly onclick="showMessage('gender_msg')">
-                </div>
-                
-                <!-- Row 3: Address -->
-                <div class="mb-3">
-                    <label for="address" class="form-label">Address</label>
-                    <input type="text" class="form-control" id="address" name="address" value="{{ user[3] }}" pattern=".*\d{6}.*" title="Address must contain a 6-digit Singapore postal code." required>
-                </div>
-                
-                <!-- Row 4: Contact Number -->
-                <div id="contact" class="mb-3">
-                    <label for="contact_number" class="form-label">Contact Number</label>
-                    <div class="input-group">
-                        <span class="input-group-text">+65</span>
-                        <input type="text" class="form-control" id="contact_number" name="contact_number" value="{{ user[4] }}" pattern="^[689]\d{7}$" title="Phone number must start with 6, 8, or 9 and contain 8 digits." required>
-                    </div>
-                </div>
+            
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" value="{{ user[0] }}" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ user[1] }}" required>
+            </div>
+            
+            <div class="mb-3 mb-password">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Leave blank if no change">
             </div>
         </div>
 
-        <div class="form-buttons">
-            <button type="submit" class="btn btn-primary">Update Account</button>
+        <!-- Second Column -->
+        <div class="col-md-6">
+            <!-- Row 1: Date of Birth -->
+            <div class="mb-3">
+                <label for="dob" class="form-label">Date of Birth</label>
+                <p id="dob_msg" class="text-danger d-none">Please inform the staff to update personal particulars.</p>
+                <input type="date" class="form-control" id="dob" value="{{ user[8] }}" readonly onclick="showMessage('dob_msg')">
+            </div>
+            
+            <!-- Row 2: Gender -->
+            <div class="mb-3">
+                <label for="gender" class="form-label">Gender</label>
+                <p id="gender_msg" class="text-danger d-none">Please inform the staff to update personal particulars.</p>
+                <input type="text" class="form-control" id="gender" value="{{ user[7] }}" readonly onclick="showMessage('gender_msg')">
+            </div>
+            
+            <!-- Row 3: Address -->
+            <div class="mb-3">
+                <label for="address" class="form-label">Address</label>
+                <input type="text" class="form-control" id="address" name="address" value="{{ user[3] }}" pattern=".*\d{6}.*" title="Address must contain a 6-digit Singapore postal code." required>
+            </div>
+            
+            <!-- Row 4: Contact Number -->
+            <div id="contact" class="mb-3">
+                <label for="contact_number" class="form-label">Contact Number</label>
+                <div class="input-group">
+                    <span class="input-group-text">+65</span>
+                    <input type="text" class="form-control" id="contact_number" name="contact_number" value="{{ user[4] }}" pattern="^[689]\d{7}$" title="Phone number must start with 6, 8, or 9 and contain 8 digits." required>
+                </div>
+            </div>
         </div>
-    </form>
+    </div>
 
+    <div class="form-buttons">
+        <button type="submit" class="btn btn-primary">Update Account</button>
+    </div>
+</form>
+
+<div class="form-buttons mt-3">
     <!-- Separate Delete Account Form -->
-    <div class="form-buttons mt-3">
-    <form action="/delete_account" method="post" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');" class="form-inline">
+    <form id="deleteaccount" action="/delete_account" method="post" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');" class="form-inline">
         <button type="submit" class="btn btn-danger">Delete Account</button>
     </form>
-    </div>
+</div>
 
 <script>
     // Hide the flash message after 3 seconds
