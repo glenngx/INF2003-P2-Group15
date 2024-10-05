@@ -148,6 +148,17 @@ th {
     margin-bottom: 8px;
 }
 
+#searchForm {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+#searchForm button{
+    margin-top: 8px;
+}
+
 #advancedSearchForm .row {
     display: flex;
     flex-direction: column;

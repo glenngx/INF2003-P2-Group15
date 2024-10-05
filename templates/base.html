@@ -61,13 +61,12 @@
                 </li> -->
                 {% else %}
                 <li class="nav-item">
-                    <a class="nav-link {% if request.path == '/update_account' %}active{% endif %}" href="/update_account">Update Account</a>
+                    <a class="nav-link {% if request.path == '/update_account' %}active{% endif %}" href="/update_account">Account</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.path == '/logout' %}active{% endif %}" href="/logout">Logout</a>
                 </li>
                 {% endif %}
-
             </ul>
             
             <!-- Show username if logged in -->

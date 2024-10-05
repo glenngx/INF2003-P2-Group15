@@ -104,7 +104,7 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
     margin-left: 6px;
 }
 
-#deleteaccount {
+#deleteAccount {
     position: relative;
     height: 38px;
     width: fit-content;

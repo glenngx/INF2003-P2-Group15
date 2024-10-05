@@ -1,8 +1,17 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/patient_dashboard.css') }}">
+<!-- Include Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
+
 {% block content %}
+    <h1>Welcome, {{ session['username'] }}!</h1>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div class="container mt-4">
+            <div class="container">
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                         {{ message }}
@@ -12,28 +21,30 @@
         {% endif %}
     {% endwith %}
 
-    <div class="container mt-5">
-        <h2>Welcome, {{ session['username'] }}</h2>
+    <div class="row">        
+        <div class="column leftcol">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Account Details</h4>
+                    <a href="{{ url_for('patient.update_account') }}" class="btn">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    <p>Email: {{ user.Email }}</p>
+                    <p>Address: {{ user.Address or 'N/A' }}</p>
+                    <p>Contact Number: {{ user.ContactNumber or 'N/A' }}</p>
+                </div>
+                <!-- <div class="card-footer">
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
+                </div> -->
+            </div>
 
-        <div class="card mb-4">
-            <div class="card-header">
-                <h3>Your Account Details</h3>
-            </div>
-            <div class="card-body">
-                <p><strong>Email:</strong> {{ user.Email }}</p>
-                <p><strong>Address:</strong> {{ user.Address or 'N/A' }}</p>
-                <p><strong>Contact Number:</strong> {{ user.ContactNumber or 'N/A' }}</p>
-            </div>
-            <div class="card-footer">
-                <a href="{{ url_for('patient.update_account') }}" class="btn btn-warning">Update Account</a>
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
-            </div>
+            <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary">Book an Appointment</a>
         </div>
-
-        <a href="{{ url_for('patient.book_appointment') }}" class="btn btn-primary mb-4">Book an Appointment</a>
-
-        <h3 class="mt-4">Your Appointments</h3>
-        {% if appointments %}
+        <div class="column rightcol">
+            <h4>Appointments</h4>
+            {% if appointments %}
             <table class="table table-striped">
                 <thead>
                     <tr>
@@ -50,7 +61,17 @@
                             <td>{{ appt.ApptID }}</td>
                             <td>{{ appt.ApptDate }}</td>
                             <td>{{ appt.ApptTime }}</td>
-                            <td>{{ appt.ApptStatus }}</td>
+                            <td>
+                                {% if appt.ApptStatus == 'Confirmed' %}
+                                    <span class="badge badge-success">{{ appt.ApptStatus }}</span>
+                                {% elif appt.ApptStatus == 'Pending' %}
+                                    <span class="badge badge-warning">{{ appt.ApptStatus }}</span>
+                                {% elif appt.ApptStatus == 'Cancelled' %}
+                                    <span class="badge badge-danger">{{ appt.ApptStatus }}</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">{{ appt.ApptStatus }}</span>
+                                {% endif %}
+                            </td>
                             <td>{{ appt.ApptReason }}</td>
                         </tr>
                     {% endfor %}
@@ -59,7 +80,9 @@
         {% else %}
             <p>You have no appointments booked.</p>
         {% endif %}
+        </div>
     </div>
+
     <script>
         // Hide the flash message after 3 seconds
         setTimeout(function() {
