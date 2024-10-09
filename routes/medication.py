@@ -1,12 +1,10 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
+from flask import render_template, request, redirect, session, url_for, flash
 from . import medication_bp
 from db import get_db_connection
-import mysql.connector
-from datetime import datetime, timedelta
+from datetime import datetime
 
 @medication_bp.route('/medications')
 def medications():
-    # Check if the user is logged in and is staff
     if not session.get('is_staff') == 1:
         flash("You do not have permission to access the Medication List.")
         return redirect(url_for('patient.patient_dashboard'))
@@ -18,10 +16,10 @@ def medications():
     search_query = request.args.get('search')
 
     if search_query:
-        # If there's a search query, filter medications by the name using SQL LIKE
+        # Filter medications by the name LIKE operation
         cursor.execute("SELECT * FROM Medications WHERE name LIKE %s ORDER BY name ASC", ('%' + search_query + '%',))
     else:
-        # Otherwise, fetch all medications sorted alphabetically by name
+        # Fetch all medications sorted ASC by name
         cursor.execute("SELECT * FROM Medications ORDER BY name ASC")
 
     medications = cursor.fetchall()
@@ -31,7 +29,7 @@ def medications():
 
     return render_template('medications.html', medications=medications)
 
-# Route to handle medication quantity updates
+# Medication quantity updates route
 @medication_bp.route('/update_medication_quantity', methods=['POST'])
 def update_medication_quantity():
     if not session.get('is_staff') == 1:
@@ -42,13 +40,13 @@ def update_medication_quantity():
     medication_id = request.form.get('medication_id')
     quantity_change = int(request.form.get('quantity_change'))
 
-    # Check for valid input
+    # Check for valid medication and quantity
     if not medication_id or not quantity_change:
         flash('Invalid input, please try again.', 'danger')
         return redirect(url_for('medication.medications'))
 
     connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)  # Ensure the cursor returns dictionaries
+    cursor = connection.cursor(dictionary=True)
 
     # Fetch current quantity of the medication
     cursor.execute("SELECT quantity FROM Medications WHERE MedID = %s", (medication_id,))
@@ -60,10 +58,11 @@ def update_medication_quantity():
         connection.close()
         return redirect(url_for('medication.medications'))
 
-    # Update the quantity in the database
+    # Update the quantity in the DB
     new_quantity = medication['quantity'] + quantity_change
     cursor.execute("UPDATE Medications SET quantity = %s WHERE MedID = %s", (new_quantity, medication_id))
 
+    # Based on the user input if they used - or not, add a tracking log to InventoryLogs table
     if quantity_change > 0:
         change_type = 'addition'
     elif quantity_change < 0:
@@ -83,7 +82,7 @@ def update_medication_quantity():
 
     return redirect(url_for('medication.medications'))
 
-# Route to handle adding new medications
+# Adding med route
 @medication_bp.route('/manage_medication', methods=['POST'])
 def manage_medication():
     if not session.get('is_staff') == 1:
@@ -104,7 +103,7 @@ def manage_medication():
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    # Insert the new medication into the database
+    # INSERT new med into DB
     cursor.execute("INSERT INTO Medications (name, form, dosage, quantity, indication) VALUES (%s, %s, %s, %s, %s)",
                    (name, form, dosage, quantity, indication))
     connection.commit()
@@ -116,7 +115,7 @@ def manage_medication():
 
     return redirect(url_for('medication.medications'))
 
-# Route to handle deleting medications
+# Deleting med route
 @medication_bp.route('/delete_medication', methods=['POST'])
 def delete_medication():
     if not session.get('is_staff') == 1:
@@ -132,7 +131,7 @@ def delete_medication():
     connection = get_db_connection()
     cursor = connection.cursor()
 
-    # Check if medication exists
+    # Pre-check to see if med already exsist
     cursor.execute("SELECT * FROM Medications WHERE MedID = %s", (medication_id,))
     medication = cursor.fetchone()
 
@@ -142,7 +141,7 @@ def delete_medication():
         connection.close()
         return redirect(url_for('medication.medications'))
 
-    # Delete the medication from the database
+    # Delete the med from DB
     cursor.execute("DELETE FROM Medications WHERE MedID = %s", (medication_id,))
     connection.commit()
 

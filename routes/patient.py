@@ -1,6 +1,6 @@
 # routes/patient.py
 
-from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
+from flask import render_template, request, redirect, session, url_for, flash
 from . import patient_bp
 from db import get_db_connection
 from utils import is_valid_sg_address, is_valid_sg_phone
@@ -23,7 +23,7 @@ def patient_dashboard():
         cursor.execute("SELECT * FROM Patients WHERE UserID = %s", (session['user_id'],))
         patient = cursor.fetchone()
 
-        # Fetch appointments for the patient
+        # Fetch appointments for patient
         cursor.execute("""
             SELECT ApptID, PatientID, ApptDate, ApptTime, ApptStatus, ApptReason
             FROM Appointments
@@ -40,7 +40,7 @@ def patient_dashboard():
         flash('Please login or create a new account to access our services.')
         return redirect(url_for('auth.login'))
     
-# Route to update the logged-in user's account details
+# Update account route
 @patient_bp.route('/update_account', methods=['GET', 'POST'])
 def update_account():
     if 'user_id' not in session:
@@ -52,11 +52,11 @@ def update_account():
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
-        password = request.form['password']  # Get the password input
+        password = request.form['password'] 
         address = request.form.get('address')
         contact_number = request.form.get('contact_number')
         
-        # Validate address and phone number
+        # Validation checks
         if address and not is_valid_sg_address(address):
             flash('Invalid Singapore address. Please provide a valid address with a 6-digit postal code.')
             return redirect(url_for('patient.update_account'))
@@ -65,11 +65,10 @@ def update_account():
             flash('Invalid Singapore phone number. Please provide a valid 8-digit number starting with 6, 8, or 9.')
             return redirect(url_for('patient.update_account'))
         
-        # Fetch the existing value of is_staff from the database
+        # Fetch the existing value of is_staff from DB
         cursor.execute("SELECT IsStaff FROM Users WHERE UserID = %s", (session['user_id'],))
         existing_is_staff = cursor.fetchone()[0]
 
-        # Check if email already exists for another user
         cursor.execute("SELECT * FROM Users WHERE Email = %s AND UserID != %s", (email, session['user_id']))
         existing_user = cursor.fetchone()
 
@@ -77,18 +76,17 @@ def update_account():
             flash('Email is already in use by another account.')
             return redirect(url_for('patient.update_account'))
 
-        # Fetch the existing hashed password from the database
+        # Fetch hashed password from DB
         cursor.execute("SELECT Password FROM Users WHERE UserID = %s", (session['user_id'],))
         existing_hashed_password = cursor.fetchone()[0]
 
-        # Only re-hash and update the password if a new one is provided
-        if password.strip():  # Check if a new password is entered
+        # Check if there is new password, if not keep the old one
+        if password.strip():
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         else:
-            # If no new password is provided, keep the old hashed password
             hashed_password = existing_hashed_password
 
-        # Update user details in the database
+        # Update new details into the DB
         cursor.execute("""
             UPDATE Users
             SET Username = %s, Email = %s, Password = %s, Address = %s, ContactNumber = %s, IsStaff = %s
@@ -101,7 +99,7 @@ def update_account():
         flash('Account updated successfully!', 'success')
         return redirect(url_for('patient.update_account'))
 
-    # Fetch the current user's data (join Users and Patients tables)
+    # Fetch the current user's data using JOIN statement on Users and Patients tables
     cursor.execute("""
         SELECT u.Username, u.Email, u.Password, u.Address, u.ContactNumber, p.PatientName, p.NRIC, p.PatientGender, p.PatientDOB
         FROM Users u
@@ -114,7 +112,7 @@ def update_account():
 
     return render_template('update_account.html', user=user)
 
-# Route to book and view appointment
+# Book and view appointment(s) route
 @patient_bp.route('/book_appointment', methods=['GET', 'POST'])
 def book_appointment():
     if 'user_id' not in session:
@@ -126,26 +124,27 @@ def book_appointment():
         return redirect(url_for('staff.staff_dashboard'))
 
     # Get the current date and the date one week from now
+    # Patients should not be able to book further than that
     today = datetime.now().date()
     one_week_later = today + timedelta(days=7)
 
     if request.method == 'POST':
-        # Collect form data
         appt_date = request.form.get('appt_date')
         appt_time = request.form.get('appt_time')
         appt_reason = request.form.get('appt_reason')
 
-        # Basic validation
+        # Validation
         if not appt_date or not appt_time or not appt_reason:
             flash('All fields are required.')
             return redirect(url_for('patient.book_appointment'))
 
-        # Validate date and time formats
+        # Validate date and time
         try:
             appt_date_obj = datetime.strptime(appt_date, '%Y-%m-%d').date()
             appt_time_obj = datetime.strptime(appt_time, '%H:%M').time()
-            # Ensure the appointment is in 30-minute intervals
-            if appt_time_obj.minute not in [0, 30]:
+
+            # Ensure appointments are in 30-minute intervals
+            if appt_time_obj.minute not in [0, 30]: 
                 flash('Appointments must be booked at 30-minute intervals.')
                 return redirect(url_for('patient.book_appointment'))
         except ValueError:
@@ -162,12 +161,11 @@ def book_appointment():
             flash('Appointments can only be booked within the next 7 days.')
             return redirect(url_for('patient.book_appointment'))
 
-        # Connect to the database
         connection = get_db_connection()
         cursor = connection.cursor()
 
         try:
-            # Fetch PatientID for the current user
+            # Fetch PatientID
             cursor.execute("SELECT PatientID FROM Patients WHERE UserID = %s", (session['user_id'],))
             patient = cursor.fetchone()
 

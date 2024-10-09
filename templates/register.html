@@ -2,7 +2,6 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
-<!-- Include Font Awesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 {% endblock %}
@@ -86,7 +85,7 @@
         if (flashMessage) {
             flashMessage.style.display = 'none';
         }
-    }, 3000);  // 3000 milliseconds = 3 seconds
+    }, 3000);  // 3000 ms = 3 seconds
 
     // Password Toggle
     const togglePassword = document.querySelector('#togglePassword');

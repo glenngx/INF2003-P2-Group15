@@ -55,10 +55,6 @@
                 {% endif %}
 
                 {% if not session['username'] %}
-                <!-- Uncomment the following block if 'Register' option is required -->
-                <!-- <li class="nav-item">
-                    <a class="nav-link {% if request.path == '/register' %}active{% endif %}" href="/register">Register</a>
-                </li> -->
                 {% else %}
                 <li class="nav-item">
                     <a class="nav-link {% if request.path == '/update_account' %}active{% endif %}" href="/update_account">Account</a>

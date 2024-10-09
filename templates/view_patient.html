@@ -28,11 +28,11 @@
             </tr>
         </thead>
         <tbody>
-            {% for record in history %}
+            {% for record in history %} <!-- [] is based on the colums in PatientHistory table -->
             <tr>
-                <td>{{ record[5] }}</td> <!-- index 5 corresponds to date -->
-                <td>{{ record[3] }}</td> <!-- index 3 corresponds to diagnosis -->
-                <td>{{ record[4] }}</td> <!-- index 2 corresponds to notes -->
+                <td>{{ record[5] }}</td> <!-- Date -->
+                <td>{{ record[3] }}</td> <!-- Diagnosis -->
+                <td>{{ record[4] }}</td> <!-- Notes -->
             </tr>
             {% endfor %}
         </tbody>
@@ -54,7 +54,7 @@
             <textarea name="notes" id="notes" class="form-control w-50" rows="5"></textarea>
         </div>
         <input type="hidden" name="appt_id" value="{{ appt_id }}">
-        <input type="hidden" name="patient_id" value="{{ patient[0] }}"><!-- Assuming index 0 corresponds to PatientID -->
+        <input type="hidden" name="patient_id" value="{{ patient[0] }}">
         <button type="submit" class="btn btn-primary">Prescribe</button>
     </form>
 
@@ -70,13 +70,13 @@
         </tr>
     </thead>
     <tbody>
-        {% for prescription in prescriptions %}
+        {% for prescription in prescriptions %} <!-- [] is based on the colums in Prescriptions table -->
         <tr>
-            <td>{{ prescription[0] }}</td> <!-- index 0 corresponds to PrescriptionID -->
-            <td>{{ prescription[3] }}</td> <!-- index 3 corresponds to MedID -->
-            <td>{{ prescription[4] }}</td> <!-- index 4 corresponds to Dosage -->
-            <td>{{ prescription[5] }}</td> <!-- index 5 corresponds to Date -->
-            <td>{{ prescription[6] }}</td> <!-- index 6 corresponds to Notes -->
+            <td>{{ prescription[0] }}</td> <!-- PrescriptionID -->
+            <td>{{ prescription[3] }}</td> <!-- MedID -->
+            <td>{{ prescription[4] }}</td> <!-- Dosage -->
+            <td>{{ prescription[5] }}</td> <!-- DateTime -->
+            <td>{{ prescription[6] }}</td> <!-- Notes -->
         </tr>
         {% endfor %}
     </tbody>
@@ -88,6 +88,7 @@
     </form>
 
     <script>
+        // This script is to display the dropdown list of meds based on user input
         async function fetchMedications() {
             const input = document.getElementById('medication').value;
 
@@ -106,8 +107,8 @@
                 li.onclick = function () {
                     const inputField = document.getElementById('medication');
                     inputField.value = li.textContent; // Set input value to the dropdown item's text
-                    medicationList.innerHTML = ''; // Clear the suggestion list
-                    inputField.focus(); // Optionally focus back on the input field
+                    medicationList.innerHTML = ''; // Clear the dropdown list
+                    inputField.focus(); // Focus back on the input field
                 };
                 medicationList.appendChild(li);
             });
@@ -119,9 +120,10 @@
             if (flashMessage) {
                 flashMessage.style.display = 'none';
             }
-        }, 3000);  // 3000 milliseconds = 3 seconds
+        }, 3000);  // 3000 ms = 3 seconds
     </script>
     
+    <!-- Additional styling -->
     <style>
         .dropdown-list {
             border: 1px solid #ccc;

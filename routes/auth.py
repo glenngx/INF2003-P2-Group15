@@ -1,6 +1,6 @@
 # routes/auth.py
 
-from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
+from flask import render_template, request, redirect, session, url_for, flash
 from . import auth_bp
 from db import get_db_connection
 from utils import is_valid_nric, is_valid_sg_address, is_valid_sg_phone
@@ -9,7 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # User login route
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    # If user is already logged in, redirect to appropriate dashboard
+    # Display the correct dashboard based on role
     if 'username' in session:
         if session.get('is_staff') == 1:
             return redirect(url_for('staff.staff_dashboard'))
@@ -35,13 +35,13 @@ def login():
         if user and check_password_hash(user[3], password):
             session['user_id'] = user[0]
             session['username'] = user[1]
-            session['is_staff'] = user[6]  # IsStaff column
+            session['is_staff'] = user[6]
 
             # Redirect based on whether the user is staff or patient
-            if user[6] == 1:  # If IsStaff is 1, it's a staff member
+            if user[6] == 1: 
                 flash('Welcome, staff member!', 'success')
                 return redirect(url_for('staff.staff_dashboard'))
-            else:  # If IsStaff is 0, it's a patient
+            else:  
                 flash('Welcome, patient!', 'success')
                 return redirect(url_for('patient.patient_dashboard'))
         else:
@@ -59,15 +59,15 @@ def register():
         email = request.form['email']
         password = request.form['password']
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')  # Hash the password
-        address = request.form.get('address')  # Optional field
-        contact_number = request.form.get('contact_number')  # Optional field
-        name = request.form.get('name')  # New field for actual name
-        nric = request.form.get('nric')  # New field for NRIC
-        gender = request.form.get('gender')  # New field for gender
-        dob = request.form.get('dob')  # New field for DOB
+        address = request.form.get('address')
+        contact_number = request.form.get('contact_number')
+        name = request.form.get('name')
+        nric = request.form.get('nric')
+        gender = request.form.get('gender')
+        dob = request.form.get('dob')
         is_staff = 1 if 'is_staff' in request.form else 0
         
-        # Validate address and phone number
+        # Validate address
         if address and not is_valid_sg_address(address):
             flash('Invalid Singapore address. Please provide a valid address with a 6-digit postal code.')
             return redirect(url_for('auth.register'))
@@ -110,7 +110,7 @@ def register():
         # Get the newly created user's ID
         user_id = cursor.lastrowid
 
-        # Insert a corresponding record into the Patients table with NULL values if the user is not staff
+        # Insert a corresponding record into the Patients table with NULL values for height and weight
         if not is_staff:
             cursor.execute("""
                 INSERT INTO Patients (UserID, PatientName, NRIC, PatientGender, PatientHeight, PatientWeight, PatientDOB)
@@ -129,10 +129,10 @@ def register():
 # User logout route
 @auth_bp.route('/logout')
 def logout():
-    session.clear()  # Clear session data
+    session.clear()
     return redirect(url_for('auth.login'))
 
-# Route to delete the user's account
+# Delete user route, only for staff member
 @auth_bp.route('/delete_account', methods=['POST'])
 def delete_account():
     if 'user_id' not in session:
@@ -141,7 +141,7 @@ def delete_account():
     connection = get_db_connection()
     cursor = connection.cursor()
     
-    # Delete all records associated with the user
+    # Delete all records associated with the user/patient
     cursor.execute("DELETE FROM Prescriptions WHERE PatientID = (SELECT PatientID FROM Patients WHERE UserID = %s)", (session['user_id'],))
     cursor.execute("DELETE FROM PatientHistory WHERE PatientID = (SELECT PatientID FROM Patients WHERE UserID = %s)", (session['user_id'],))
     cursor.execute("DELETE FROM Appointments WHERE PatientID = (SELECT PatientID FROM Patients WHERE UserID = %s)", (session['user_id'],))
@@ -151,7 +151,7 @@ def delete_account():
     cursor.close()
     connection.close()
 
-    # Clear session and log the user out after account deletion
+    # Clear session and log the user out after deleting account
     session.clear()
     flash('Your account has been deleted successfully.', 'success')
     return redirect(url_for('auth.register'))

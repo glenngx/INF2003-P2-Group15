@@ -1,6 +1,6 @@
 # routes/staff.py
 
-from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
+from flask import render_template, request, redirect, session, url_for, flash, jsonify
 from . import staff_bp
 from db import get_db_connection
 from utils import is_valid_nric, is_valid_sg_address, is_valid_sg_phone
@@ -16,7 +16,7 @@ def staff_dashboard():
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        # Get filter values from the request (GET parameters)
+        # Get values from the request (GET parameters)
         user_id = request.args.get('user_id', '')
         username = request.args.get('username', '')
         email = request.args.get('email', '')
@@ -28,10 +28,10 @@ def staff_dashboard():
         height = request.args.get('height', '')
         weight = request.args.get('weight', '')
         dob = request.args.get('dob', '')
-        diagnosis = request.args.get('diagnosis', '')  # New filter for diagnosis
-        diagnosis_date = request.args.get('diagnosis_date', '')  # New filter for diagnosis date
+        diagnosis = request.args.get('diagnosis', '') 
+        diagnosis_date = request.args.get('diagnosis_date', '')  
 
-        # Construct the query to fetch patient details
+        # Query to fetch patient details, similar to @patient_bp.route
         query = """
             SELECT u.UserID, u.Username, u.Email, u.Address, u.ContactNumber, 
                    p.PatientName, p.NRIC, p.PatientGender, p.PatientHeight, 
@@ -113,16 +113,14 @@ def staff_dashboard():
         cursor.close()
         connection.close()
 
-        # Render the template with the filtered patient data
         return render_template('staff_dashboard.html', patients=patients)
     else:
         flash('Please login or create a new account to access our services.')
         return redirect(url_for('auth.login'))
     
-# Edit patient records
+# Edit patient records route
 @staff_bp.route('/edit_patient/<int:patient_id>', methods=['GET', 'POST'])
 def edit_patient(patient_id):
-    # Check if user is logged in and is staff
     if 'is_staff' not in session or session['is_staff'] != 1:
         flash('You do not have access to this page.')
         return redirect(url_for('auth.login'))
@@ -164,19 +162,16 @@ def edit_patient(patient_id):
 
         actual_patient_id = patient_data['PatientID']  # Use PatientID instead of UserID
 
-        # Validate NRIC format
+        # Validations
         if not is_valid_nric(nric):
             errors['nric'] = 'Invalid NRIC format. It must start with S, T, F, G, or M, followed by 7 digits and one letter.'
 
-        # Validate phone number
         if not is_valid_sg_phone(contact_number):
             errors['contact_number'] = 'Invalid phone number format. It must start with 6, 8, or 9 and be 8 digits long.'
 
-        # Validate address for Singapore postal code
         if not is_valid_sg_address(address):
             errors['address'] = 'Invalid address. Please include a valid 6-digit postal code.'
 
-        # Check for duplicates in the database
         cursor.execute("SELECT IsStaff FROM Users WHERE UserID = %s", (patient_id,))
         existing_is_staff = cursor.fetchone()['IsStaff']
 
@@ -198,14 +193,13 @@ def edit_patient(patient_id):
         if existing_nric:
             errors['nric'] = 'NRIC is already in use.'
 
-        # If no errors, update the patient details in the database
+        # If no errors, update the patient details into DB
         if not errors:
             try:
-                # Handle empty height and weight fields
+                # Handle empty height and weight fields (user does not have weight and height by default)
                 patient_height = patient_height if patient_height.strip() else None
                 patient_weight = patient_weight if patient_weight.strip() else None
                 
-                # Update Patients table
                 cursor.execute("""
                     UPDATE Patients
                     SET PatientName = %s, NRIC = %s, PatientGender = %s, PatientHeight = %s, 
@@ -217,7 +211,7 @@ def edit_patient(patient_id):
                 cursor.execute("SELECT Password FROM Users WHERE UserID = %s", (patient_id,))
                 existing_hashed_password = cursor.fetchone()['Password']
 
-                if password and password.strip():  # If a new password is provided
+                if password and password.strip():
                     hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
                     cursor.execute("""
                         UPDATE Users
@@ -243,16 +237,15 @@ def edit_patient(patient_id):
                             WHERE HistoryID = %s AND PatientID = %s
                         """, (diagnosis_text[idx], diagnosis_date[idx], diagnosis_notes[idx], appt_id[idx], diag_id, actual_patient_id))
 
-                # Commit all changes to the database
                 connection.commit()
 
                 flash('Patient details and diagnoses updated successfully!', 'success')
                 return redirect(url_for('staff.staff_dashboard'))
             except mysql.connector.Error as err:
-                connection.rollback()  # Rollback in case of any error
+                connection.rollback()  # Rollback in case there is an error with adding record
                 flash(f'An error occurred: {err}', 'danger')
 
-    # Fetch patient details including UserID and PatientID
+    # Fetch patient details
     cursor.execute("SELECT UserID, PatientID, PatientName, NRIC, PatientGender, PatientHeight, PatientWeight, PatientDOB FROM Patients WHERE UserID = %s", (patient_id,))
     patient = cursor.fetchone()
 
@@ -268,21 +261,17 @@ def edit_patient(patient_id):
     cursor.execute("SELECT HistoryID, ApptID, diagnosis, date, notes FROM PatientHistory WHERE PatientID = %s ORDER BY date DESC", (patient['PatientID'],))
     patient_diagnoses = cursor.fetchall()
 
-    # Format diagnosis dates to 'YYYY-MM-DD' for display
+    # Change date format to Year/Month/Date (default format in DB)
     for diag in patient_diagnoses:
         if diag['date']:
-            diag['date'] = diag['date'].strftime('%Y-%m-%d')
+            diag['date'] = diag['date'].strftime('%y-%m-%d')
 
-    # Close cursor and connection
     cursor.close()
     connection.close()
 
     return render_template('edit_patient.html', patient=patient, user=user, diagnoses=patient_diagnoses, errors=errors)
 
-
-
-
-# Delete patient records
+# Delete patient records route. Only staff should be able to delete patient records due to how a clinic works
 @staff_bp.route('/delete_patient/<int:patient_id>', methods=['POST'])
 def delete_patient(patient_id):
     if 'is_staff' not in session or session['is_staff'] != 1:
@@ -293,13 +282,12 @@ def delete_patient(patient_id):
     cursor = connection.cursor()
 
     try:
-        # First delete the patient's appointments
+        # Delete from all tables associated to patients
+        # Presriptions, PatientHistory, Appointments, Patients, Users in order
+        cursor.execute("DELETE FROM Prescriptions WHERE PatientID = (SELECT PatientID FROM Patients WHERE UserID = %s)", (session['user_id'],))
+        cursor.execute("DELETE FROM PatientHistory WHERE PatientID = (SELECT PatientID FROM Patients WHERE UserID = %s)", (session['user_id'],))
         cursor.execute("DELETE FROM Appointments WHERE PatientID = (SELECT PatientID FROM Patients WHERE UserID = %s)", (patient_id,))
-
-        # Then delete the patient from the Patients table
         cursor.execute("DELETE FROM Patients WHERE UserID = %s", (patient_id,))
-
-        # Finally, delete the user from the Users table
         cursor.execute("DELETE FROM Users WHERE UserID = %s", (patient_id,))
 
         connection.commit()
@@ -313,6 +301,8 @@ def delete_patient(patient_id):
 
     return redirect(url_for('staff.staff_dashboard'))
 
+# Manage appointment route
+# It is for doctors to see what appointments there are for the next 7 days.
 @staff_bp.route('/manage_appointment')
 def manage_appointment():
     if 'is_staff' in session and session['is_staff'] == 1:
@@ -323,10 +313,11 @@ def manage_appointment():
         start_date = datetime.now()
         end_date = start_date + timedelta(days=7)
 
-        # Fetch appointments in the next 7 days
+        # Fetch appointments in the next 7 days sorted by earliest first
         cursor.execute("""
             SELECT * FROM Appointments 
             WHERE ApptDate BETWEEN %s AND %s AND ApptStatus = %s
+            ORDER BY ApptDate, ApptTime
         """, (start_date.date(), end_date.date(), "Pending"))
         appointments = cursor.fetchall()
 
@@ -346,22 +337,23 @@ def view_patient(patient_id, appt_id):
         # Check if we are saving a prescription
         if 'medication' in request.form:
             medication_name = request.form['medication']
-            # Extract just the medication name from the display text
+            # Extract only the medication name from the display text
             med_name_only = medication_name.split(' (')[0]  # Gets everything before the first opening parenthesis
             duration = request.form['duration']
             notes = request.form['notes']
 
-            # Fetch the MedID based on medication name
+            # Fetch the MedID based on med name
             cursor.execute("SELECT MedID, quantity FROM Medications WHERE name = %s", (med_name_only,))
             med = cursor.fetchone()
 
             if med:
                 med_id = med[0]
                 current_quantity = med[1]
-                requested_dosage = int(duration)  # Assuming 'duration' is the amount to be taken
+                requested_dosage = int(duration)
                 print(current_quantity, type(current_quantity))
                 print(requested_dosage, type(requested_dosage))
-                # Check if enough medication is available
+
+                # Check if there is enough medication
                 if current_quantity >= requested_dosage:
                     # Insert into Prescriptions table
                     cursor.execute("""
@@ -373,7 +365,7 @@ def view_patient(patient_id, appt_id):
                     new_quantity = current_quantity - requested_dosage
                     cursor.execute("UPDATE Medications SET quantity = %s WHERE MedID = %s", (new_quantity, med_id))
 
-                    # Insert log into Inventory logs
+                    # Insert an entry into Inventory logs
                     cursor.execute("""
                         INSERT INTO InventoryLogs (MedID, change_type, quantity_changed, date) 
                         VALUES (%s, 'subtract', %s, %s)
@@ -387,7 +379,7 @@ def view_patient(patient_id, appt_id):
                 flash('Medication not found!', 'danger')
 
         else:
-            # Save the diagnosis and notes (existing functionality)
+            # Save the diagnosis and notes
             diagnosis = request.form['diagnosis']
             notes = request.form['notes']
             date = datetime.now()
@@ -400,15 +392,11 @@ def view_patient(patient_id, appt_id):
             connection.commit()
             flash('Patient history updated successfully!', 'success')
 
-    # Fetch patient information
+    # Fetch past patient information, past diagnosis and prescriptions to display
     cursor.execute("SELECT * FROM Patients WHERE PatientID = %s", (patient_id,))
     patient_info = cursor.fetchone()
-
-    # Fetch patient's past diagnoses
     cursor.execute("SELECT * FROM PatientHistory WHERE PatientID = %s", (patient_id,))
     patient_history = cursor.fetchall()
-
-    # Fetch past prescriptions for the patient
     cursor.execute("SELECT * FROM Prescriptions WHERE PatientID = %s", (patient_id,))
     past_prescriptions = cursor.fetchall()
 
@@ -416,7 +404,7 @@ def view_patient(patient_id, appt_id):
     connection.close()
     return render_template('view_patient.html', patient=patient_info, history=patient_history, prescriptions=past_prescriptions, appt_id=appt_id)
 
-# Fetch medications
+# Fetch medications route
 @staff_bp.route('/fetch_medications')
 def fetch_medications():
     query = request.args.get('query', '')
@@ -430,18 +418,20 @@ def fetch_medications():
     cursor.close()
     connection.close()
     
-    # Prepare response data
+    # Prepare response data based on columns in med table
     medication_list = [
         {
-            'name': med[1],      # Assuming index 1 corresponds to medication name
-            'form': med[2],      # Assuming index 2 corresponds to the form column
-            'dosage': med[3],    # Assuming index 3 corresponds to the dosage column
+            'name': med[1],      
+            'form': med[2],      
+            'dosage': med[3],    
         }
         for med in medications
     ]
     
     return jsonify(medication_list)
 
+# Advanced search routes
+# Search feature for staff only using different parameters to find patients
 @staff_bp.route('/advanced_search', methods=['POST'])
 def advanced_search():
     if 'is_staff' not in session or session['is_staff'] != 1:
@@ -463,6 +453,7 @@ def advanced_search():
         'diagnosis_date': request.form.get('diagnosis_date')
     }
 
+    # Catch-all query to get the data
     query = """
     SELECT u.UserID, u.Username, u.Email, u.Address, u.ContactNumber, 
            p.PatientName, p.NRIC, p.PatientGender, p.PatientHeight, 
@@ -487,8 +478,7 @@ def advanced_search():
     # Add filters dynamically if they exist
     for field, value in filters.items():
         if value:
-            if field in ['Username', 'Email', 'Address', 'ContactNumber', 'PatientName', 'NRIC',
-                         'diagnosis']:  # Adjusted field list
+            if field in ['Username', 'Email', 'Address', 'ContactNumber', 'PatientName', 'NRIC', 'diagnosis']: 
                 conditions.append(f"{field} LIKE %s")
                 params.append(f"%{value}%")
             elif field == 'PatientGender':
@@ -526,7 +516,8 @@ def advanced_search():
     cursor.execute(query, params)
     results = cursor.fetchall()
 
-    for result in results:  # Ensure that DOB is formatted correctly
+    # Check DoB format
+    for result in results:
         if result['PatientDOB']:
             result['PatientDOB'] = result['PatientDOB'].strftime('%Y-%m-%d')
         if result['diagnosis_date']:  # Ensure diagnosis_date is formatted correctly
@@ -537,13 +528,15 @@ def advanced_search():
 
     return jsonify(results)
 
+# Staff only feature: edit appointments for patients
+# Initially we allowed patients/users to delete, but it is not correct
+# And does not work in real-life, since we are also recording NRIC
 @staff_bp.route('/edit_appointment/<int:appt_id>', methods=['GET', 'POST'])
 def edit_appointment(appt_id):
     connection = get_db_connection()
     cursor = connection.cursor()
 
     if request.method == 'POST':
-        # If the form is submitted, update the appointment details.
         date = request.form['date']
         time = request.form['time']
         status = request.form['status']
@@ -557,9 +550,8 @@ def edit_appointment(appt_id):
 
         connection.commit()
         flash('Appointment updated successfully!', 'success')
-        return redirect(url_for('staff.manage_appointment'))  # Redirect to appointments list after updating
+        return redirect(url_for('staff.manage_appointment'))
 
-    # If it's a GET request, fetch the current appointment details.
     cursor.execute("SELECT * FROM Appointments WHERE ApptID = %s", (appt_id,))
     appointment = cursor.fetchone()
 
@@ -568,6 +560,9 @@ def edit_appointment(appt_id):
     
     return render_template('edit_appointment.html', appointment=appointment)
 
+# Book appointment route
+# Staff can also help to book appointments
+# Copied from @patient_bp.route
 @staff_bp.route('/staff_book_appointment', methods=['GET', 'POST'])
 def staff_book_appointment():
     if 'user_id' not in session:
@@ -579,13 +574,12 @@ def staff_book_appointment():
     one_week_later = today + timedelta(days=7)
 
     if request.method == 'POST':
-        # Collect form data
         nric = request.form.get('patient_nric')
         appt_date = request.form.get('appt_date')
         appt_time = request.form.get('appt_time')
         appt_reason = request.form.get('appt_reason')
 
-        # Basic validation
+        #Validation
         if not nric or not appt_date or not appt_time or not appt_reason:
             flash('All fields are required.')
             return redirect(url_for('staff.staff_book_appointment'))
@@ -608,7 +602,6 @@ def staff_book_appointment():
             flash('Appointments can only be booked within the next 7 days.')
             return redirect(url_for('staff.staff_book_appointment'))
 
-        # Connect to the database
         connection = get_db_connection()
         cursor = connection.cursor()
 
@@ -634,7 +627,7 @@ def staff_book_appointment():
                 flash('This appointment slot is already taken. Please choose another time.')
                 return redirect(url_for('staff.staff_book_appointment'))
 
-            # Insert the appointment into the Appointments table
+            # Insert entry into the Appointments table
             cursor.execute("""
                 INSERT INTO Appointments (PatientID, ApptDate, ApptTime, ApptStatus, ApptReason)
                 VALUES (%s, %s, %s, %s, %s)
@@ -655,6 +648,10 @@ def staff_book_appointment():
 
     return render_template('staff_book_appointment.html', min_date=today, max_date=one_week_later)
 
+# Delete appointments route
+# Only staff can delete appointments
+# Reasoning is because patients might jave malicious intent and keep spam booking and deleting
+# Hogging up the time slots
 @staff_bp.route('/delete_appointment/<int:appt_id>', methods=['POST'])
 def delete_appointment(appt_id):
     connection = get_db_connection()
@@ -669,6 +666,8 @@ def delete_appointment(appt_id):
     
     return redirect(url_for('staff.manage_appointment'))  # Redirect to appointments list
 
+# Update ApptStatus route
+# Update ApptStatus to complete, which will then no longer be shown in @staff_bp.route('/manage_appointment')
 @staff_bp.route('/complete_appointment/<int:appt_id>', methods=['POST'])
 def complete_appointment(appt_id):
     connection = get_db_connection()
