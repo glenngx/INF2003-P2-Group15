@@ -57,7 +57,36 @@
         <input type="hidden" name="patient_id" value="{{ patient[0] }}"><!-- Assuming index 0 corresponds to PatientID -->
         <button type="submit" class="btn btn-primary">Prescribe</button>
     </form>
-    
+
+    <h3>Past Prescriptions</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Prescription ID</th>
+            <th>Medication ID</th>
+            <th>Dosage</th>
+            <th>Date</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for prescription in prescriptions %}
+        <tr>
+            <td>{{ prescription[0] }}</td> <!-- index 0 corresponds to PrescriptionID -->
+            <td>{{ prescription[3] }}</td> <!-- index 3 corresponds to MedID -->
+            <td>{{ prescription[4] }}</td> <!-- index 4 corresponds to Dosage -->
+            <td>{{ prescription[5] }}</td> <!-- index 5 corresponds to Date -->
+            <td>{{ prescription[6] }}</td> <!-- index 6 corresponds to Notes -->
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+    <form method="POST" action="{{ url_for('staff.complete_appointment', appt_id=appt_id) }}">
+        <input type="hidden" name="patient_id" value="{{ patient[0] }}">
+        <button type="submit" class="btn btn-success">Complete Appointment</button>
+    </form>
+
     <script>
         async function fetchMedications() {
             const input = document.getElementById('medication').value;
@@ -73,14 +102,24 @@
             // Populate the dropdown list
             medications.forEach(med => {
                 const li = document.createElement('li');
-                li.textContent = med.name; // Change to name, which is the appropriate field for display
+                li.textContent = `${med.name} (${med.form}, ${med.dosage})`; // Formatting the display text
                 li.onclick = function () {
-                    document.getElementById('medication').value = med.name; // Setting input value to medication name
+                    const inputField = document.getElementById('medication');
+                    inputField.value = li.textContent; // Set input value to the dropdown item's text
                     medicationList.innerHTML = ''; // Clear the suggestion list
+                    inputField.focus(); // Optionally focus back on the input field
                 };
                 medicationList.appendChild(li);
             });
         }
+
+        // Hide the flash message after 3 seconds
+        setTimeout(function () {
+            const flashMessage = document.getElementById('flash-message');
+            if (flashMessage) {
+                flashMessage.style.display = 'none';
+            }
+        }, 3000);  // 3000 milliseconds = 3 seconds
     </script>
     
     <style>

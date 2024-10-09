@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, session, url_for, f
 from . import medication_bp
 from db import get_db_connection
 import mysql.connector
+from datetime import datetime, timedelta
 
 @medication_bp.route('/medications')
 def medications():
@@ -62,6 +63,17 @@ def update_medication_quantity():
     # Update the quantity in the database
     new_quantity = medication['quantity'] + quantity_change
     cursor.execute("UPDATE Medications SET quantity = %s WHERE MedID = %s", (new_quantity, medication_id))
+
+    if quantity_change > 0:
+        change_type = 'addition'
+    elif quantity_change < 0:
+        change_type = 'subtract'
+
+    cursor.execute("""
+                        INSERT INTO InventoryLogs (MedID, change_type, quantity_changed, date) 
+                        VALUES (%s, %s, %s, %s)
+                    """, (medication_id, change_type,quantity_change, datetime.now()))
+    
     connection.commit()
 
     flash(f'Medication ID {medication_id} updated. New quantity: {new_quantity}', 'success')

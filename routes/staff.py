@@ -235,12 +235,12 @@ def edit_patient(patient_id):
                 # Handle diagnosis updates and inserts
                 for idx, diag_id in enumerate(diagnosis_id):
                     
-                    # If diagnosis ID (history_id) exists, update the existing diagnosis
+                    # If diagnosis ID (HistoryID) exists, update the existing diagnosis
                     if diag_id:
                         cursor.execute("""
                             UPDATE PatientHistory 
                             SET diagnosis = %s, date = %s, notes = %s, ApptID = %s
-                            WHERE history_id = %s AND PatientID = %s
+                            WHERE HistoryID = %s AND PatientID = %s
                         """, (diagnosis_text[idx], diagnosis_date[idx], diagnosis_notes[idx], appt_id[idx], diag_id, actual_patient_id))
 
                 # Commit all changes to the database
@@ -265,7 +265,7 @@ def edit_patient(patient_id):
     user = cursor.fetchone()
 
     # Fetch past diagnoses using PatientID
-    cursor.execute("SELECT history_id, ApptID, diagnosis, date, notes FROM PatientHistory WHERE PatientID = %s ORDER BY date DESC", (patient['PatientID'],))
+    cursor.execute("SELECT HistoryID, ApptID, diagnosis, date, notes FROM PatientHistory WHERE PatientID = %s ORDER BY date DESC", (patient['PatientID'],))
     patient_diagnoses = cursor.fetchall()
 
     # Format diagnosis dates to 'YYYY-MM-DD' for display
@@ -326,8 +326,8 @@ def manage_appointment():
         # Fetch appointments in the next 7 days
         cursor.execute("""
             SELECT * FROM Appointments 
-            WHERE ApptDate BETWEEN %s AND %s
-        """, (start_date.date(), end_date.date()))
+            WHERE ApptDate BETWEEN %s AND %s AND ApptStatus = %s
+        """, (start_date.date(), end_date.date(), "Pending"))
         appointments = cursor.fetchall()
 
         cursor.close()
@@ -346,11 +346,13 @@ def view_patient(patient_id, appt_id):
         # Check if we are saving a prescription
         if 'medication' in request.form:
             medication_name = request.form['medication']
+            # Extract just the medication name from the display text
+            med_name_only = medication_name.split(' (')[0]  # Gets everything before the first opening parenthesis
             duration = request.form['duration']
             notes = request.form['notes']
 
             # Fetch the MedID based on medication name
-            cursor.execute("SELECT MedID, quantity FROM Medications WHERE name = %s", (medication_name,))
+            cursor.execute("SELECT MedID, quantity FROM Medications WHERE name = %s", (med_name_only,))
             med = cursor.fetchone()
 
             if med:
@@ -406,9 +408,13 @@ def view_patient(patient_id, appt_id):
     cursor.execute("SELECT * FROM PatientHistory WHERE PatientID = %s", (patient_id,))
     patient_history = cursor.fetchall()
 
+    # Fetch past prescriptions for the patient
+    cursor.execute("SELECT * FROM Prescriptions WHERE PatientID = %s", (patient_id,))
+    past_prescriptions = cursor.fetchall()
+
     cursor.close()
     connection.close()
-    return render_template('view_patient.html', patient=patient_info, history=patient_history, appt_id=appt_id)
+    return render_template('view_patient.html', patient=patient_info, history=patient_history, prescriptions=past_prescriptions, appt_id=appt_id)
 
 # Fetch medications
 @staff_bp.route('/fetch_medications')
@@ -425,7 +431,15 @@ def fetch_medications():
     connection.close()
     
     # Prepare response data
-    medication_list = [{'name': med[1]} for med in medications] # Assuming index 1 corresponds to medication name
+    medication_list = [
+        {
+            'name': med[1],      # Assuming index 1 corresponds to medication name
+            'form': med[2],      # Assuming index 2 corresponds to the form column
+            'dosage': med[3],    # Assuming index 3 corresponds to the dosage column
+        }
+        for med in medications
+    ]
+    
     return jsonify(medication_list)
 
 @staff_bp.route('/advanced_search', methods=['POST'])
@@ -653,4 +667,24 @@ def delete_appointment(appt_id):
     cursor.close()
     connection.close()
     
+    return redirect(url_for('staff.manage_appointment'))  # Redirect to appointments list
+
+@staff_bp.route('/complete_appointment/<int:appt_id>', methods=['POST'])
+def complete_appointment(appt_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        # Update the appointment status in the database
+        cursor.execute("UPDATE Appointments SET ApptStatus = 'Completed' WHERE ApptID = %s", (appt_id,))
+        connection.commit()
+        flash('Appointment completed successfully!', 'success')
+    except Exception as e:
+        connection.rollback()
+        flash('Error completing the appointment: {}'.format(str(e)), 'danger')
+    finally:
+        cursor.close()
+        connection.close()
+
+    # Redirect back to the view patient page after completion
     return redirect(url_for('staff.manage_appointment'))  # Redirect to appointments list

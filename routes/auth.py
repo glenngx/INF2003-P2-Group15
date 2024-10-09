@@ -113,8 +113,8 @@ def register():
         # Insert a corresponding record into the Patients table with NULL values if the user is not staff
         if not is_staff:
             cursor.execute("""
-                INSERT INTO Patients (UserID, PatientName, NRIC, PatientGender, PatientHeight, PatientWeight, PatientDOB, PatientConditions)
-                VALUES (%s, %s, %s, %s, NULL, NULL, %s, NULL)
+                INSERT INTO Patients (UserID, PatientName, NRIC, PatientGender, PatientHeight, PatientWeight, PatientDOB)
+                VALUES (%s, %s, %s, %s, NULL, NULL, %s)
             """, (user_id, name, nric, gender, dob))
             connection.commit()
 
