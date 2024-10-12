@@ -264,7 +264,7 @@ def edit_patient(patient_id):
     # Change date format to Year/Month/Date (default format in DB)
     for diag in patient_diagnoses:
         if diag['date']:
-            diag['date'] = diag['date'].strftime('%y-%m-%d')
+            diag['date'] = diag['date'].strftime('%Y-%m-%d')
 
     cursor.close()
     connection.close()
@@ -397,7 +397,12 @@ def view_patient(patient_id, appt_id):
     patient_info = cursor.fetchone()
     cursor.execute("SELECT * FROM PatientHistory WHERE PatientID = %s", (patient_id,))
     patient_history = cursor.fetchall()
-    cursor.execute("SELECT * FROM Prescriptions WHERE PatientID = %s", (patient_id,))
+    cursor.execute("""
+    SELECT p.PrescriptionID, m.name, p.Dosage, p.Date, p.Notes 
+    FROM Prescriptions p 
+    JOIN Medications m ON p.MedID = m.MedID 
+    WHERE p.PatientID = %s
+    """, (patient_id,))
     past_prescriptions = cursor.fetchall()
 
     cursor.close()

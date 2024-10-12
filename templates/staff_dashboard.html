@@ -31,15 +31,6 @@
                             <tr>
                                 <th>
                                     <div class="filter-header">
-                                        UserID
-                                        <i class="fas fa-filter filter-icon" onclick="toggleFilter('filter-userid')"></i>
-                                    </div>
-                                    <div id="filter-userid" class="filter-container">
-                                        <input type="text" name="user_id" value="{{ request.args.get('user_id', '') }}" placeholder="Filter UserID" class="form-control filter-input" oninput="submitFilter()">
-                                    </div>
-                                </th>
-                                <th>
-                                    <div class="filter-header">
                                         Username
                                         <i class="fas fa-filter filter-icon" onclick="toggleFilter('filter-username')"></i>
                                     </div>
@@ -164,7 +155,6 @@
                         <tbody id="patientTableBody">
                             {% for patient in patients %}
                             <tr>
-                                <td>{{ patient[0] }}</td>  <!-- UserID -->
                                 <td>{{ patient[1] }}</td>  <!-- Username -->
                                 <td>{{ patient[2] }}</td>  <!-- Email -->
                                 <td>{{ patient[3] }}</td>  <!-- Address -->
@@ -301,7 +291,6 @@
             data.forEach(patient => {
                 const row = `
                     <tr>
-                        <td>${patient.UserID}</td>
                         <td>${patient.Username}</td>
                         <td>${patient.Email}</td>
                         <td>${patient.Address}</td>

@@ -30,7 +30,7 @@
         <tbody>
             {% for record in history %} <!-- [] is based on the colums in PatientHistory table -->
             <tr>
-                <td>{{ record[5] }}</td> <!-- Date -->
+                <td>{{ record[5].strftime('%Y-%m-%d') }}</td> <!-- Date -->
                 <td>{{ record[3] }}</td> <!-- Diagnosis -->
                 <td>{{ record[4] }}</td> <!-- Notes -->
             </tr>
@@ -46,7 +46,7 @@
             <ul id="medication_list" class="dropdown-list"></ul>
         </div>
         <div class="mb-3">
-            <label for="duration">Dosage:</label>
+            <label for="duration">Quantity:</label>
             <input type="text" name="duration" id="duration" required class="form-control w-50" rows="5">
         </div>
         <div class="mb-3">
@@ -63,20 +63,20 @@
     <thead>
         <tr>
             <th>Prescription ID</th>
-            <th>Medication ID</th>
-            <th>Dosage</th>
+            <th>Medication Name</th>
+            <th>Dispensed Quantity</th>
+            <th>Instructions</th>
             <th>Date</th>
-            <th>Notes</th>
         </tr>
     </thead>
     <tbody>
         {% for prescription in prescriptions %} <!-- [] is based on the colums in Prescriptions table -->
         <tr>
             <td>{{ prescription[0] }}</td> <!-- PrescriptionID -->
-            <td>{{ prescription[3] }}</td> <!-- MedID -->
-            <td>{{ prescription[4] }}</td> <!-- Dosage -->
-            <td>{{ prescription[5] }}</td> <!-- DateTime -->
-            <td>{{ prescription[6] }}</td> <!-- Notes -->
+            <td>{{ prescription[1] }}</td> <!-- Med Name -->
+            <td>{{ prescription[2] }}</td> <!-- Dosage -->
+            <td>{{ prescription[4] }}</td> <!-- Notes -->
+            <td>{{ prescription[3].strftime('%Y-%m-%d')}}</td> <!-- Dates -->
         </tr>
         {% endfor %}
     </tbody>
